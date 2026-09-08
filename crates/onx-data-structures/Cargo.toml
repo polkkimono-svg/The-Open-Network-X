@@ -1,0 +1,13 @@
+[package]
+name = "onx-data-structures"
+version = "0.1.0"
+edition = "2021"
+description = "ONX canonical data structures: workchains, account addresses, shard identifiers, messages, and block headers per docs/specification/data-structures.md"
+license = "MIT"
+publish = false
+
+[dependencies]
+onx-primitives = { path = "../onx-primitives" }
+
+[dev-dependencies]
+hex = "0.4"

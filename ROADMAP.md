@@ -35,7 +35,10 @@ don't duplicate the work.
   and Ed25519 signing/verification, with tests covering the specification's
   §6 test plan (NIST and RFC 8032 vectors, boundary values, and adversarial
   truncated/trailing/non-canonical-input rejection).
-- Reformatted `README.md` with proper Markdown structure.
+- Added `crates/onx-data-structures` implementing `docs/specification/data-structures.md`
+  in full: workchain identifiers, account IDs, full addresses, ShardIdent bitwise prefix encoding,
+  message structures, and block headers with domain-separated SHA-256 hashing.
+- Reformatted `README.md` with proper Markdown structure and updated status diagram.
 
 ## Up for grabs
 
@@ -43,16 +46,10 @@ Ordered by priority — earlier items unblock more of what follows.
 
 ### Now (unblocks the most)
 
-- [ ] **Implement `docs/specification/data-structures.md` in code.**
-      A crate (e.g. `crates/onx-data-structures`) for `ShardIdent`,
-      account/workchain identifiers, the message structure, and the block
-      header structure, built on `onx-primitives`. Include the malformed-input
-      and test-vector coverage the spec already defines in its own §5/§6.
 - [ ] **Implement `docs/specification/state-model.md` in code.**
       A crate for the account state record layout, cell binary serialization,
       domain-separated cell hashing, and Merkle proof structures. Depends on
-      `onx-primitives` and, for account/shard identifiers, the
-      data-structures crate above.
+      `onx-primitives` and `onx-data-structures`.
 - [ ] **Write the Transactions and Messages specification**
       (`docs/specification/transactions.md` + ADR). This is the next
       unwritten item in the architecture's specification sequence
