@@ -12,6 +12,7 @@ ONX explores, reconstructs, and implements that vision independently and from fi
 - [Onyx](#onyx)
 - [Project philosophy](#project-philosophy)
 - [Project status](#project-status)
+- [Changelog and roadmap](ROADMAP.md)
 - [Repository structure](#repository-structure)
 - [Building and testing](#building-and-testing)
 - [Long-term goal](#long-term-goal)
@@ -87,6 +88,8 @@ Specification work completed so far, with accompanying architecture decision rec
 | Implementation language | — | `ADR-0004` |
 
 The `crates/onx-primitives` crate is the first implementation layer, covering the protocol-primitives specification above.
+
+See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-grabs checklist of what to work on next.
 
 ## Repository structure
 
