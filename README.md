@@ -13,6 +13,7 @@ ONX explores, reconstructs, and implements that vision independently and from fi
 - [Project philosophy](#project-philosophy)
 - [Project status](#project-status)
 - [Changelog and roadmap](ROADMAP.md)
+- [Contributing](CONTRIBUTING.md)
 - [Repository structure](#repository-structure)
 - [Building and testing](#building-and-testing)
 - [Long-term goal](#long-term-goal)
@@ -120,7 +121,7 @@ flowchart TD
     style Legend fill:transparent,stroke:transparent
 ```
 
-See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-grabs checklist of what to work on next.
+See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-grabs checklist of what to work on next, and [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow every contribution is expected to follow.
 
 ## Repository structure
 
