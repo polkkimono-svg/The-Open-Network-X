@@ -232,7 +232,11 @@ fn ed25519_rejects_wrong_domain_tag() {
     let message = b"transfer 10 onyx";
 
     let signature = secret.sign(&DomainTag::from_ascii("ONX_TX_BODY_V1"), message);
-    let verified = public.verify(&DomainTag::from_ascii("ONX_BLK_HDR_V1"), message, &signature);
+    let verified = public.verify(
+        &DomainTag::from_ascii("ONX_BLK_HDR_V1"),
+        message,
+        &signature,
+    );
     assert_eq!(
         verified.unwrap_err(),
         PrimitiveError::SignatureVerificationFailed
@@ -310,7 +314,10 @@ fn ed25519_rejects_non_canonical_signature_scalar() {
         s[i] = (sum & 0xff) as u8;
         carry = sum >> 8;
     }
-    assert_eq!(carry, 0, "s + L must not overflow 256 bits for a valid s < L");
+    assert_eq!(
+        carry, 0,
+        "s + L must not overflow 256 bits for a valid s < L"
+    );
 
     let non_canonical = Signature::decode_exact(&bytes).unwrap();
     let verified = public.verify(&tag, message, &non_canonical);
@@ -336,9 +343,11 @@ fn ed25519_rfc8032_test_vector_1_raw_primitive() {
         "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b",
     );
 
-    let signing_key =
-        ed25519_dalek::SigningKey::from_bytes(&secret_key_bytes.try_into().unwrap());
-    assert_eq!(signing_key.verifying_key().to_bytes().to_vec(), public_key_bytes);
+    let signing_key = ed25519_dalek::SigningKey::from_bytes(&secret_key_bytes.try_into().unwrap());
+    assert_eq!(
+        signing_key.verifying_key().to_bytes().to_vec(),
+        public_key_bytes
+    );
 
     let signature = ed25519_dalek::Signature::from_bytes(&signature_bytes.try_into().unwrap());
     use ed25519_dalek::Verifier;
