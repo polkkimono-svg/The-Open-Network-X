@@ -44,10 +44,23 @@ don't duplicate the work.
 - Added `CONTRIBUTING.md` codifying the spec-before-code workflow, per-layer crate
   structure, malformed-input and domain-separation conventions, ADR expectations, and
   PR checklist this roadmap and `INSTRUCTIONS.md` assume.
+- Read `ton.md` in full and expanded the "Up for grabs" checklist below with
+  concrete white-paper section references for every still-unwritten spec item,
+  added a wholly untracked **Payment channels (TON Payments)** item
+  (`ton.md` §5) with a new open question **ONX-ARCH-009**, added a new open
+  question **ONX-ARCH-010** for the previously-unquestioned Networking item
+  and split its description into ADNL/DHT/overlay sub-components (`ton.md`
+  §3.1–§3.3), and added an explicit "Out of scope for now" note for `ton.md`
+  §4 (TON Services and Applications).
 
 ## Up for grabs
 
-Ordered by priority — earlier items unblock more of what follows.
+Ordered by priority — earlier items unblock more of what follows. Items marked
+**(ton.md §N)** cite the white-paper section that most directly informs the
+task; per `INSTRUCTIONS.md` §1 and CONTRIBUTING.md, none of the numeric values
+or mechanisms cited from `ton.md` become ONX rules until a separate ONX
+specification or ADR says so — they're the starting research material, not
+the answer.
 
 ### Now (unblocks the most)
 
@@ -60,7 +73,28 @@ Ordered by priority — earlier items unblock more of what follows.
       unwritten item in the architecture's specification sequence
       (item 4) and resolves **ONX-ARCH-004** (cross-shard message order,
       replay, and failure semantics). Nothing past this point can be
-      specified precisely without it.
+      specified precisely without it. **(ton.md §2.4)** covers this in far
+      more detail than the architecture baseline's one-line summary; at
+      minimum the spec needs a documented ONX interpretation of:
+      - the message value model as a list of `(currency_id, value)` pairs
+        (§2.4.5) — this is the concrete white-paper basis for the
+        `extra_currencies` field that `docs/specification/data-structures.md`
+        already lists but `crates/onx-data-structures`' `Message` type does
+        not yet implement (flagged in the PR #8 review);
+      - external messages ("messages from nowhere", §2.4.6) and their
+        distinct admission rule (tentative execution under a small gas
+        limit before inclusion, since they carry no value to pay for their
+        own processing) versus ordinary internal messages;
+      - the output-queue-only model (§2.4.16–§2.4.17): there is no input
+        queue, and a per-account output queue has a partial delivery order
+        (older-block messages before newer, and same-source→same-destination
+        messages in generation order) that any admission rule must preserve;
+      - the two-path delivery mechanism — slow hypercube routing (§2.4.19)
+        and the optional instant/fast path (§2.4.20) — and what ONX decides
+        to adopt, simplify, or defer here, since this is one of the more
+        elaborate mechanisms in the reference;
+      - double-delivery prevention via a per-account-chain record of recently
+        delivered message hashes (§2.4.23).
 
 ### Next
 
@@ -68,29 +102,108 @@ Ordered by priority — earlier items unblock more of what follows.
       specification exists.
 - [ ] Write the **Blocks and masterchain coupling** specification
       (block validity, parent references, masterchain references,
-      canonicality) — architecture sequence item 5.
+      canonicality) — architecture sequence item 5. **(ton.md §2.6, §2.7.3)**
+      Block headers also need to carry the split/merge announcement flags
+      (split/merge prepare and commit, §2.7.3) described under Dynamic
+      sharding below — the two specs should cross-reference each other on
+      this rather than each silently assuming the other handles it.
 - [ ] Write the **Execution (virtual machine)** specification — instruction
       semantics, resource accounting, exceptions, deterministic contract
       state transitions — architecture sequence item 6. Resolves part of
-      **ONX-ARCH-006** (VM rules per workchain).
+      **ONX-ARCH-006** (VM rules per workchain). **(ton.md §2.1.20, §5.1.9)**
+      Note explicitly: the white paper states that Merkle-proof operations
+      inside the VM (needed for the Payment channels item below) are much
+      harder to retrofit than to design in from the start (§5.1.9, echoing
+      the general warning in §2.8.16 about how rigid a blockchain's "genome"
+      becomes post-deployment) — whether or not ONX builds payment channels
+      soon, this spec should explicitly decide whether to reserve VM
+      primitives for Merkle-proof verification now, and record that decision
+      (accept, defer, or reject) rather than leaving it implicit.
 
 ### Later (depend on consensus existing)
 
 - [ ] Write the **Consensus and validator operation** specification —
       validator lifecycle, assignment, quorum rules, finality, invalid-block
       evidence — architecture sequence item 7. Resolves **ONX-ARCH-005**.
-- [ ] Write the **Networking** specification — peer identity, authentication,
-      transport, discovery, synchronization, propagation — architecture
-      sequence item 8.
+      **(ton.md §2.6)** covers considerably more ground than the one-line
+      summary suggests, including: validator election and stake-weighting
+      (§2.6.7), nominators and fishermen as distinct non-validator roles for
+      capital-provision and invalidity-reporting respectively (§2.6.3–§2.6.4,
+      directly relevant to the vertical-block-correction mechanism ADR-0001
+      already commits to preserving), rotating validator task groups per
+      shard (§2.6.8–§2.6.9), block-candidate propagation and BFT signature
+      thresholds (§2.6.10–§2.6.12), a validator signature's "depth" and
+      partial/late-signature reward decay (§2.6.20–§2.6.21), and the
+      relative-vs-recursive block reliability distinction with a bounded
+      (e.g. two-month in the reference) challenge window before a block is
+      no longer reconsidered (§2.6.26–§2.6.28) — this last point is a
+      concrete finality rule ONX-ARCH-005 needs an explicit answer for.
+- [ ] Write a **Networking** specification — architecture sequence item 8,
+      **(ton.md §3, resolves ONX-ARCH-010)**. The reference treats this as
+      three distinct, separately specifiable sub-layers rather than one
+      protocol, and the spec (or specs) should probably follow that split:
+      - **Peer identity and transport (ADNL)** — 256-bit abstract addresses
+        derived from a hashed, serialized key description, channel/tunnel
+        identifiers, and the reliable large-datagram protocol built on top
+        (ton.md §3.1);
+      - **Peer/service discovery (DHT)** — a Kademlia-like distributed hash
+        table keyed by 256-bit hashes, used to locate nodes, services, and
+        tunnel entry points (ton.md §3.2);
+      - **Overlay networks and propagation** — per-shard gossip/broadcast
+        overlays, including the streaming/erasure-coded broadcast protocol
+        used for block-candidate propagation described alongside consensus
+        in §2.6.10 (ton.md §3.3).
 - [ ] Write the **Dynamic sharding** specification — shard-tree invariants,
       split/merge lifecycle, state migration, validator responsibility —
       architecture sequence item 9. Resolves **ONX-ARCH-007** and the
-      remainder of **ONX-ARCH-006** (initial workchain set).
+      remainder of **ONX-ARCH-006** (initial workchain set). **(ton.md §2.7)**
+      gives concrete mechanics to decide on or explicitly deviate from:
+      shard configuration as masterchain state organized as a binary tree
+      per workchain (§2.7.1–§2.7.2); split/merge changes announced several
+      blocks in advance via header flags before being committed (§2.7.3);
+      bounded distance limits on how far the active shard configuration may
+      drift from the configuration a validator task group was assigned
+      under, before a split/merge is simply refused (§2.7.5); and formal
+      load-based trigger conditions for splitting and merging (§2.7.6,
+      §2.7.8) that a deterministic implementation needs to pin down
+      precisely, not leave as "when load is high enough."
 - [ ] Write the **Economics** specification — Onyx supply, denomination,
       fees, rewards, staking, penalties — architecture sequence item 10.
       Resolves **ONX-ARCH-008**. Deliberately last: `INSTRUCTIONS.md` §18
       requires the consensus and resource-accounting model to be specified
-      first.
+      first. **(ton.md Appendix A)** gives TON's own concrete reference
+      figures the ONX spec must explicitly accept, adapt, or reject rather
+      than silently inherit: a 10^9-unit subdivision (with a further
+      2^-16 sub-unit, "specks," for gas-price rounding), an initial supply
+      cap, and an inflation model tying validator rewards to a percentage
+      of stake per year with slashed stakes partly burned (deflationary).
+- [ ] Write a **Payment channels (TON Payments)** specification —
+      **(ton.md §5, resolves new ONX-ARCH-009)**. This is not currently
+      tracked anywhere in this roadmap or in architecture.md, despite being
+      an entire chapter of the reference: point-to-point trustless payment
+      channels backed by an on-chain arbiter smart contract (§5.1.1–§5.1.4),
+      an asynchronous two-workchain variant avoiding round-trip
+      confirmation delay (§5.1.5), conditional transfers/"promises"
+      enabling channels to be chained (§5.1.7), and a payment-channel
+      network ("lightning network") for multi-hop transfers with path
+      finding (§5.2). Depends on Execution existing first, since §5.1.9
+      is explicit that this needs VM support for embedding and verifying
+      Merkle proofs of an inner (virtual) blockchain's state transitions —
+      see the note on the Execution item above.
+
+### Out of scope for now
+
+Not tasks — an explicit note, per `INSTRUCTIONS.md` §22–23 ("build
+incrementally," "do not optimize prematurely"), that **ton.md §4 (TON
+Services and Applications)** — TON DNS, TON Storage as a general file-hosting
+service, TON Proxy, and ton-services/ton-sites/ton-browser — describes an
+application/ecosystem layer built on top of the blockchain, network, and
+payments layers above. None of it should be started before Consensus,
+Networking, Sharding, Payments, and Economics exist; adding it earlier would
+be designing for requirements this project isn't at yet. This is distinct
+from the archival storage of blocks and state already implied by the
+existing Networking item (architecture.md's "Networking and storage" domain)
+— that's node-operational storage, not the TON Storage *service*.
 
 ### Project infrastructure (can be picked up any time, independent of the above)
 
@@ -114,9 +227,10 @@ Ordered by priority — earlier items unblock more of what follows.
   difficulty.** Execution depends on state and transactions being defined;
   consensus depends on execution's resource accounting; networking is
   deliberately kept separate from consensus validity per the architecture
-  baseline's required boundaries; economics is last because it depends on
-  the resource-accounting and consensus model being settled
-  (`INSTRUCTIONS.md` §18).
+  baseline's required boundaries; payment channels depend on execution
+  supporting Merkle-proof verification (ton.md §5.1.9); economics is last
+  because it depends on the resource-accounting and consensus model being
+  settled (`INSTRUCTIONS.md` §18).
 - This ordering is a recommendation, not a rule enforced anywhere in code.
   If you have a good reason to reorder something, open an issue or PR
   discussing it — per project philosophy, deviations should be explicit and
