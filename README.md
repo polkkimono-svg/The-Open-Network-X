@@ -12,6 +12,7 @@ ONX explores, reconstructs, and implements that vision independently and from fi
 - [Onyx](#onyx)
 - [Project philosophy](#project-philosophy)
 - [Project status](#project-status)
+- [Changelog and roadmap](ROADMAP.md)
 - [Repository structure](#repository-structure)
 - [Building and testing](#building-and-testing)
 - [Long-term goal](#long-term-goal)
@@ -87,6 +88,39 @@ Specification work completed so far, with accompanying architecture decision rec
 | Implementation language | — | `ADR-0004` |
 
 The `crates/onx-primitives` crate is the first implementation layer, covering the protocol-primitives specification above.
+
+The diagram below shows the full specification/implementation sequence from `docs/specification/architecture.md`, and where each layer currently stands:
+
+```mermaid
+flowchart TD
+    subgraph Legend[" "]
+        direction LR
+        L1["Spec + code done"]:::done
+        L2["Spec done, code pending"]:::specOnly
+        L3["Not started"]:::todo
+    end
+
+    A["Architecture baseline<br/>ADR-0001"]:::done
+    B["Protocol primitives<br/>ADR-0002 + onx-primitives crate"]:::done
+    C["Data structures<br/>ADR-0002, spec only"]:::specOnly
+    D["State model<br/>ADR-0003, spec only"]:::specOnly
+    E["Transactions & messages"]:::todo
+    F["Blocks & masterchain coupling"]:::todo
+    G["Execution / VM"]:::todo
+    H["Consensus & validator operation"]:::todo
+    I["Networking"]:::todo
+    J["Dynamic sharding"]:::todo
+    K["Economics"]:::todo
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+
+    classDef done fill:#2f9e44,stroke:#2f9e44,color:#fff
+    classDef specOnly fill:#f08c00,stroke:#f08c00,color:#fff
+    classDef todo fill:#495057,stroke:#495057,color:#fff
+    style Legend fill:transparent,stroke:transparent
+```
+
+See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-grabs checklist of what to work on next.
 
 ## Repository structure
 
