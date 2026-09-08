@@ -38,10 +38,9 @@ impl fmt::Display for PrimitiveError {
                 f,
                 "trailing bytes: consumed {consumed} of {actual} available bytes"
             ),
-            PrimitiveError::LengthOutOfRange { declared, max } => write!(
-                f,
-                "length prefix {declared} exceeds maximum {max}"
-            ),
+            PrimitiveError::LengthOutOfRange { declared, max } => {
+                write!(f, "length prefix {declared} exceeds maximum {max}")
+            }
             PrimitiveError::NonCanonicalEncoding => {
                 write!(f, "non-canonical point or scalar encoding")
             }
