@@ -38,7 +38,12 @@ don't duplicate the work.
 - Added `crates/onx-data-structures` implementing `docs/specification/data-structures.md`
   in full: workchain identifiers, account IDs, full addresses, ShardIdent bitwise prefix encoding,
   message structures, and block headers with domain-separated SHA-256 hashing.
+- Added `.github/workflows/ci.yml` running `cargo fmt`, `cargo clippy`, `cargo build`,
+  and `cargo test` on pull requests.
 - Reformatted `README.md` with proper Markdown structure and updated status diagram.
+- Added `CONTRIBUTING.md` codifying the spec-before-code workflow, per-layer crate
+  structure, malformed-input and domain-separation conventions, ADR expectations, and
+  PR checklist this roadmap and `INSTRUCTIONS.md` assume.
 
 ## Up for grabs
 
@@ -89,13 +94,13 @@ Ordered by priority — earlier items unblock more of what follows.
 
 ### Project infrastructure (can be picked up any time, independent of the above)
 
-- [ ] Set up CI (`cargo build`, `cargo test`, `cargo clippy`, `cargo fmt --check`)
-      so every PR is verified automatically instead of relying on manual runs.
+- [x] ~~Set up CI (`cargo build`, `cargo test`, `cargo clippy`, `cargo fmt --check`)~~ —
+      done in `.github/workflows/ci.yml`, though its `push` trigger only watches a
+      `work` branch, not `main`; worth fixing.
 - [ ] Decide and record a license (`README.md` currently says this is
       still pending — see [License](README.md#license)).
-- [ ] Add a `CONTRIBUTING.md` codifying the workflow this document assumes:
-      spec + ADR before implementation, one crate per protocol layer, PRs
-      reference the specification section they implement.
+- [x] ~~Add a `CONTRIBUTING.md` codifying the workflow this document assumes~~ — done,
+      see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Notes on prioritization
 
