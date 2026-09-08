@@ -137,6 +137,8 @@ These are intentionally unresolved, not defaults:
 | ONX-ARCH-006 | What initial workchains exist, and which VM rules apply to each? | Workchain and VM specifications. |
 | ONX-ARCH-007 | What split/merge thresholds, timing, and state-transition rules apply? | Sharding specification and deterministic tests. |
 | ONX-ARCH-008 | What are Onyx supply, denomination, fee, reward, stake, and penalty rules? | Economics specification and ADRs. |
+| ONX-ARCH-009 | What are the payment-channel and payment-channel-network (lightning-style) protocol rules, and what Execution/VM primitives (e.g. Merkle-proof operations over an embedded virtual blockchain) do they require? | Payment-channels specification, with an explicit cross-reference from the Execution specification. |
+| ONX-ARCH-010 | What are the peer-identity/transport (ADNL), distributed-hash-table (DHT), and overlay/gossip protocol rules nodes use to find each other and propagate blocks? | Networking specification(s); may be split into sub-specifications per component. |
 
 ## Non-goals
 
