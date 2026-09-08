@@ -51,7 +51,7 @@ Ordered by priority — earlier items unblock more of what follows.
 
 ### Now (unblocks the most)
 
-- [ ] **Implement `docs/specification/state-model.md` in code.**
+- [x] **Implement `docs/specification/state-model.md` in code.**
       A crate for the account state record layout, cell binary serialization,
       domain-separated cell hashing, and Merkle proof structures. Depends on
       `onx-primitives` and `onx-data-structures`.
