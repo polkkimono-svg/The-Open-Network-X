@@ -87,7 +87,7 @@ Specification work completed so far, with accompanying architecture decision rec
 | State model | `docs/specification/state-model.md` | `ADR-0003` |
 | Implementation language | — | `ADR-0004` |
 
-The `crates/onx-primitives` crate is the first implementation layer, covering the protocol-primitives specification above.
+The `crates/onx-primitives` and `crates/onx-data-structures` crates cover the protocol-primitives and data-structures specifications above.
 
 The diagram below shows the full specification/implementation sequence from `docs/specification/architecture.md`, and where each layer currently stands:
 
@@ -102,7 +102,7 @@ flowchart TD
 
     A["Architecture baseline<br/>ADR-0001"]:::done
     B["Protocol primitives<br/>ADR-0002 + onx-primitives crate"]:::done
-    C["Data structures<br/>ADR-0002, spec only"]:::specOnly
+    C["Data structures<br/>ADR-0002 + onx-data-structures crate"]:::done
     D["State model<br/>ADR-0003, spec only"]:::specOnly
     E["Transactions & messages"]:::todo
     F["Blocks & masterchain coupling"]:::todo
@@ -131,7 +131,8 @@ See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-
 ├── ton.md                   # Reference white paper (unmodified)
 ├── Cargo.toml               # Rust workspace
 ├── crates/
-│   └── onx-primitives/      # Canonical encoding, hashing, and signatures
+│   ├── onx-primitives/      # Canonical encoding, hashing, and signatures
+│   └── onx-data-structures/ # ShardIdent, account/workchain IDs, messages, block headers
 └── docs/
     ├── specification/       # ONX protocol specifications
     └── decisions/           # Architecture decision records (ADRs)

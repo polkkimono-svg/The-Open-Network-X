@@ -87,9 +87,24 @@ define_fixed_integer!(Uint64, u64, 8, "Canonical big-endian `uint64`.");
 define_fixed_integer!(Uint128, u128, 16, "Canonical big-endian `uint128`.");
 
 define_fixed_integer!(Int8, i8, 1, "Canonical big-endian two's-complement `int8`.");
-define_fixed_integer!(Int16, i16, 2, "Canonical big-endian two's-complement `int16`.");
-define_fixed_integer!(Int32, i32, 4, "Canonical big-endian two's-complement `int32`.");
-define_fixed_integer!(Int64, i64, 8, "Canonical big-endian two's-complement `int64`.");
+define_fixed_integer!(
+    Int16,
+    i16,
+    2,
+    "Canonical big-endian two's-complement `int16`."
+);
+define_fixed_integer!(
+    Int32,
+    i32,
+    4,
+    "Canonical big-endian two's-complement `int32`."
+);
+define_fixed_integer!(
+    Int64,
+    i64,
+    8,
+    "Canonical big-endian two's-complement `int64`."
+);
 define_fixed_integer!(
     Int128,
     i128,
