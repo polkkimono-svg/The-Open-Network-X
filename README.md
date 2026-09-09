@@ -116,12 +116,13 @@ flowchart TD
     E["Transactions & messages<br/>ADR-0005, spec only"]:::specOnly
     F["Blocks & masterchain coupling<br/>ADR-0006, spec only"]:::specOnly
     G["Execution / VM<br/>ADR-0007, spec only"]:::specOnly
-    H["Consensus & validator operation"]:::todo
-    I["Networking"]:::todo
-    J["Dynamic sharding"]:::todo
-    K["Economics"]:::todo
+    H["Consensus & validator operation<br/>ADR-0008, spec only"]:::specOnly
+    I["Networking<br/>ADR-0009–ADR-0011, spec only"]:::specOnly
+    J["Dynamic sharding<br/>ADR-0012, spec only"]:::specOnly
+    K["Economics<br/>ADR-0013, spec only"]:::specOnly
+    L["Payment channels<br/>ADR-0014, spec only"]:::specOnly
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
 
     classDef done fill:#2f9e44,stroke:#2f9e44,color:#fff
     classDef specOnly fill:#f08c00,stroke:#f08c00,color:#fff
