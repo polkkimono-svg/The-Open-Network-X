@@ -9,6 +9,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   fuzz-regression:
     runs-on: ubuntu-latest
