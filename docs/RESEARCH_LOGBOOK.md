@@ -102,3 +102,11 @@ Persistent-offline evidence should be counted as missed assigned rounds inside a
 
 #### [QUESTION]
 Should a shard transition prepare commit the full 256- or 1,024-sample load window directly, or only a canonical hash whose preimage is fetched from the finalized shard-header sequence by validators and light clients?
+
+### Entry #10
+
+#### [ANSWER]
+Shard transition preparation should commit only a canonical hash of the load window. The ordered window can be reconstructed from finalized shard headers, while the hash makes the exact evidence set unambiguous and compact for masterchain commitments and light clients. Validators must reject a supplied preimage whose canonical header-derived encoding does not match that hash; this retains deterministic threshold evaluation without placing a variable-size sample window in every transition header.
+
+#### [QUESTION]
+When a block-sync client receives a shard header whose declared `master_ref_hash` is older than the masterchain block that first commits the shard header, should the sync protocol require both masterchain headers in the response, or define a compact proof format that links the two without downloading the intervening masterchain headers?
