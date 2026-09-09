@@ -124,8 +124,11 @@ Every instruction is `opcode : uint8` followed by zero or more immediate operand
 | `0x07` | `ROLL` | `depth: uint8` | moves `stack[depth]` to top | 1 |
 | `0x08` | `PUSHINT` | `signed: uint8`, `value: [u8; 32]` | `() -> (Integer)` | 1 |
 | `0x09` | `PUSHBYTES` | `len: uint16`, then `len` raw bytes | `() -> (Bytes)` | `1 + ceil(len / 32)` |
+| `0x0A` | `NIP` | — | `(a, b) -> (b)` | 1 |
+| `0x0B` | `TUCK` | — | `(a, b) -> (b, a, b)` | 1 |
+| `0x0C` | `BLKSWAP` | `left: uint8`, `right: uint8` | swaps the two adjacent top blocks | 1 |
 
-All ten raise `MalformedCell` if the instruction requires more stack items than are present, or if `PICK`/`ROLL`'s `depth` is not a valid stack index (§3.5.4).
+All thirteen raise `MalformedCell` if the instruction requires more stack items than are present, if `PICK`/`ROLL`'s `depth` is not a valid stack index, or if `BLKSWAP` names an empty or unavailable block (§3.5.4). The operand stack is capped at 1023 elements; an instruction that would exceed the cap raises `MalformedCell`.
 
 ### 4.3 Arithmetic, conversion, bit-strings (`0x10`–`0x3F`)
 
@@ -138,6 +141,9 @@ All ten raise `MalformedCell` if the instruction requires more stack items than 
 | `0x14` | `DIVMOD` | `width`, `flavor` | `(a, b) -> (a div b, a mod b)`, floored | 8 | `IntegerOverflow` (incl. `b = 0`, §3.3) |
 | `0x15` | `CMP` | `width`, `flavor` | `(a, b) -> (r)`, `r ∈ {-1, 0, 1}` as a signed 8-bit `Integer` | 4 | — |
 | `0x16` | `ISZERO` | — | `(a) -> (bool)`, `bool` a 1-bit unsigned `Integer` | 4 | — |
+| `0x17` | `DIV` | `width`, `flavor` | `(a, b) -> (a div b)` | 8 | `IntegerOverflow` (incl. `b = 0`) |
+| `0x18` | `LSHIFT` | `width`, `flavor` | `(a, shift) -> (a << shift)` | 4 | `IntegerOverflow` |
+| `0x19` | `RSHIFT` | `width`, `flavor` | `(a, shift) -> (a >> shift)` | 4 | `IntegerOverflow` |
 | `0x20` | `CONV` | `width: uint16`, `signed: uint8` | `(a) -> (a')`, re-checked at `width` | 4 | `IntegerOverflow` |
 | `0x30` | `BYTELEN` | — | `(Bytes) -> (Integer)`, unsigned 32-bit | 1 | — |
 | `0x31` | `CONCAT` | — | `(Bytes, Bytes) -> (Bytes)` | `4 + ceil(total_len / 32)` | — |
@@ -178,8 +184,12 @@ All ten raise `MalformedCell` if the instruction requires more stack items than 
 | `0x75` | `IFCALLREF` | `ref_index: uint8` | pop `Integer`; `CALLREF` if nonzero | 4 | `MalformedCell` if out of range and taken |
 | `0x76` | `IFNOTCALLREF` | `ref_index: uint8` | pop `Integer`; `CALLREF` if zero | 4 | `MalformedCell` if out of range and taken |
 | `0x77` | `THROW` | `kind: uint8` (`0`=`IntegerOverflow`, `1`=`AbsentNode`, `2`=`MalformedCell`, `3`=`TypeMismatch`) | unconditionally raise `kind` | 4 | the named kind, always |
+| `0x78` | `IFELSE` | `true_offset: int8`, `false_offset: int8` | pop condition and branch by byte offset | 4 | `MalformedCell` for an out-of-range target |
+| `0x79` | `IFRET` | — | pop condition and return if nonzero | 4 | — |
+| `0x7A` | `REPEAT` | `count: uint8`, `offset: int8` | re-enter preceding block when count is nonzero | 4 | `MalformedCell` for an out-of-range target |
+| `0x7B` | `UNTIL` | `offset: int8` | pop condition and re-enter preceding block while zero | 4 | `MalformedCell` for an out-of-range target |
 
-`0x78`–`0x7F` are reserved. `THROW` cannot target `OutOfGas`: that kind is raised only by the VM's own gas metering (`execution.md` §3.4), never by contract-directed control flow.
+`0x7C`–`0x7F` are reserved. `THROW` cannot target `OutOfGas`: that kind is raised only by the VM's own gas metering (`execution.md` §3.4), never by contract-directed control flow.
 
 ### 4.6 Cryptographic primitives (`0x60`–`0x6F`)
 
