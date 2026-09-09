@@ -27,6 +27,7 @@ ONX explores, reconstructs, and implements that vision independently and from fi
 - [Project philosophy](#project-philosophy)
 - [Project status](#project-status)
 - [Changelog and roadmap](ROADMAP.md)
+- [Development tasks](docs/development-tasks.md)
 - [Contributing](CONTRIBUTING.md)
 - [Repository structure](#repository-structure)
 - [Building and testing](#building-and-testing)
