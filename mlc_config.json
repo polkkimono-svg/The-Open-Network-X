@@ -1,0 +1,10 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^https?://"
+    }
+  ],
+  "replacementPatterns": [],
+  "httpHeaders": [],
+  "aliveStatusCodes": [200, 206]
+}
