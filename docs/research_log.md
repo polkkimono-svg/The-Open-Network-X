@@ -184,3 +184,12 @@ Automated log of commits tracked against whitepaper.md.
   - docs/decisions/ADR-0017-tvm-instruction-set.md
   - docs/specification/tvm-instruction-set.md
 
+## Commit a1d126211d23e71c32d8c16a0564c5884675be91
+
+- **Timestamp:** 2026-09-09T23:11:26Z
+- **Event:** push
+- **Modified files:**
+  - crates/onx-state-model/src/lib.rs
+  - crates/onx-state-model/src/storage.rs
+  - crates/onx-state-model/tests/storage_tests.rs
+
