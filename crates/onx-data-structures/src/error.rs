@@ -23,6 +23,9 @@ pub enum DataStructureError {
     /// Header magic constructor mismatch. Expected 0x1F2E3D4C.
     HeaderMagicMismatch { magic: u32 },
 
+    /// Merge parent reference inconsistency (prev_ref_hash_2 set without MERGE_RESULT or zero with MERGE_RESULT).
+    MergeParentReferenceInconsistency,
+
     /// Truncated input bytes.
     TruncatedInput { expected: usize, got: usize },
 
@@ -61,6 +64,12 @@ impl std::fmt::Display for DataStructureError {
                     f,
                     "Header magic constructor mismatch: expected 0x1F2E3D4C, got 0x{:08x}",
                     magic
+                )
+            }
+            DataStructureError::MergeParentReferenceInconsistency => {
+                write!(
+                    f,
+                    "Merge parent reference inconsistency between prev_ref_hash_2 and MERGE_RESULT flag"
                 )
             }
             DataStructureError::TruncatedInput { expected, got } => {

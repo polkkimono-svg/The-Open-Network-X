@@ -298,11 +298,66 @@ dependencies = [
 ]
 
 [[package]]
+name = "onx-consensus"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-blocks",
+ "onx-data-structures",
+ "onx-execution",
+ "onx-primitives",
+ "onx-state-model",
+ "onx-transactions",
+]
+
+[[package]]
 name = "onx-data-structures"
 version = "0.1.0"
 dependencies = [
  "hex",
  "onx-primitives",
+]
+
+[[package]]
+name = "onx-economics"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-data-structures",
+ "onx-primitives",
+ "onx-state-model",
+]
+
+[[package]]
+name = "onx-execution"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-data-structures",
+ "onx-primitives",
+ "onx-state-model",
+ "onx-transactions",
+]
+
+[[package]]
+name = "onx-networking"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-data-structures",
+ "onx-primitives",
+]
+
+[[package]]
+name = "onx-payment-channels"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-data-structures",
+ "onx-execution",
+ "onx-primitives",
+ "onx-state-model",
+ "onx-transactions",
 ]
 
 [[package]]
@@ -312,6 +367,17 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "sha2 0.11.0",
+]
+
+[[package]]
+name = "onx-sharding"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-blocks",
+ "onx-data-structures",
+ "onx-primitives",
+ "onx-state-model",
 ]
 
 [[package]]

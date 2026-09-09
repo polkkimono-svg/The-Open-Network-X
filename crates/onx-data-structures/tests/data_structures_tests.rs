@@ -2,7 +2,7 @@
 
 use onx_data_structures::{
     AccountId, BlockHeader, DataStructureError, FullAddress, Message, MessageType, ShardIdent,
-    WorkchainIdent, BLOCK_HEADER_MAGIC,
+    WorkchainIdent, BLOCK_HEADER_MAGIC, MERGE_RESULT_FLAG,
 };
 use onx_primitives::{Uint128, Uint16, Uint256, Uint32, Uint64};
 
@@ -146,6 +146,7 @@ fn test_block_header_serialization_and_hashing() {
         end_lt: Uint64::from(2000u64),
         prev_key_block: Uint32::from(90u32),
         prev_ref_hash: Uint256([0x11; 32]),
+        prev_ref_hash_2: Uint256([0x00; 32]),
         master_ref_hash: Uint256([0x00; 32]),
         state_root_hash: Uint256([0x22; 32]),
         in_msg_root_hash: Uint256([0x33; 32]),
@@ -168,6 +169,43 @@ fn test_block_header_serialization_and_hashing() {
         BlockHeader::from_bytes(&bad_magic_bytes),
         Err(DataStructureError::HeaderMagicMismatch { magic: 0xDEADBEEF })
     ));
+
+    // Test Merge Result Block Header (ADR-0016)
+    let merge_header = BlockHeader {
+        magic_constructor: Uint32::from(BLOCK_HEADER_MAGIC),
+        shard,
+        seq_no: Uint32::from(101u32),
+        flags: Uint16::from(MERGE_RESULT_FLAG),
+        gen_utime: Uint32::from(1700000010u32),
+        start_lt: Uint64::from(2000u64),
+        end_lt: Uint64::from(3000u64),
+        prev_key_block: Uint32::from(90u32),
+        prev_ref_hash: Uint256([0x11; 32]),
+        prev_ref_hash_2: Uint256([0x55; 32]),
+        master_ref_hash: Uint256([0x00; 32]),
+        state_root_hash: Uint256([0x22; 32]),
+        in_msg_root_hash: Uint256([0x33; 32]),
+        out_msg_root_hash: Uint256([0x44; 32]),
+    };
+    let merge_bytes = merge_header.to_bytes();
+    let decoded_merge = BlockHeader::from_bytes(&merge_bytes).unwrap();
+    assert_eq!(decoded_merge, merge_header);
+
+    // Negative test: prev_ref_hash_2 non-zero without MERGE_RESULT_FLAG
+    let mut bad_merge_bytes = merge_bytes;
+    bad_merge_bytes[20..22].copy_from_slice(&0u16.to_be_bytes()); // Clear flags
+    assert_eq!(
+        BlockHeader::from_bytes(&bad_merge_bytes),
+        Err(DataStructureError::MergeParentReferenceInconsistency)
+    );
+
+    // Negative test: prev_ref_hash_2 zero with MERGE_RESULT_FLAG set
+    let mut bad_merge_bytes_2 = merge_bytes;
+    bad_merge_bytes_2[78..110].copy_from_slice(&[0u8; 32]); // Zero prev_ref_hash_2 (offset 78..110)
+    assert_eq!(
+        BlockHeader::from_bytes(&bad_merge_bytes_2),
+        Err(DataStructureError::MergeParentReferenceInconsistency)
+    );
 }
 
 #[test]

@@ -84,53 +84,47 @@ Specification work completed so far, with accompanying architecture decision rec
 | --- | --- | --- |
 | Architecture baseline | `docs/specification/architecture.md` | `ADR-0001` |
 | Protocol primitives | `docs/specification/protocol-primitives.md` | `ADR-0002` |
-| Data structures | `docs/specification/data-structures.md` | `ADR-0002` |
+| Data structures | `docs/specification/data-structures.md` | `ADR-0002`, `ADR-0016` |
 | State model | `docs/specification/state-model.md` | `ADR-0003` |
 | Implementation language | — | `ADR-0004` |
-| Transactions and messages | `docs/specification/transactions.md` | `ADR-0005` |
-| Blocks and masterchain coupling | `docs/specification/blocks.md` | `ADR-0006` |
-| Execution (virtual machine) | `docs/specification/execution.md` | `ADR-0007` |
+| Transactions and messages | `docs/specification/transactions.md` | `ADR-0005`, `ADR-0018` |
+| Blocks and masterchain coupling | `docs/specification/blocks.md` | `ADR-0006`, `ADR-0016` |
+| Execution (virtual machine) | `docs/specification/execution.md`, `tvm-instruction-set.md` | `ADR-0007`, `ADR-0017` |
 | Consensus and validator operation | `docs/specification/consensus.md` | `ADR-0008` |
 | Networking (ADNL, DHT, overlays) | `docs/specification/networking-*.md` | `ADR-0009`–`ADR-0011` |
 | Dynamic sharding | `docs/specification/sharding.md` | `ADR-0012` |
-| Economics | `docs/specification/economics.md` | `ADR-0013` |
+| Economics | `docs/specification/economics.md` | `ADR-0013`, `ADR-0019` |
 | Payment channels | `docs/specification/payment-channels.md` | `ADR-0014` |
 
-The `crates/onx-primitives`, `crates/onx-data-structures`, and `crates/onx-state-model` crates cover the protocol-primitives, data-structures, and state-model specifications above. `crates/onx-transactions` covers message admission, output-queue delivery, and double-delivery prevention from the transactions and messages specification (hypercube routing is not yet implemented). `crates/onx-blocks` covers non-split/non-merge structural validity and masterchain coupling from the blocks specification (merge-block validation awaits a pending `BlockHeader` amendment; see `ROADMAP.md`).
-
-The diagram below shows the full specification/implementation sequence from `docs/specification/architecture.md`, and where each layer currently stands:
+All protocol layers now have their corresponding specification, decision records, and Rust implementations in `crates/`.
 
 ```mermaid
 flowchart TD
     subgraph Legend[" "]
         direction LR
         L1["Spec + code done"]:::done
-        L2["Spec done, code pending"]:::specOnly
-        L3["Not started"]:::todo
     end
 
     A["Architecture baseline<br/>ADR-0001"]:::done
     B["Protocol primitives<br/>ADR-0002 + onx-primitives crate"]:::done
-    C["Data structures<br/>ADR-0002 + onx-data-structures crate"]:::done
+    C["Data structures<br/>ADR-0002, ADR-0016 + onx-data-structures crate"]:::done
     D["State model<br/>ADR-0003 + onx-state-model crate"]:::done
-    E["Transactions & messages<br/>ADR-0005 + onx-transactions crate<br/>(hypercube routing pending)"]:::done
-    F["Blocks & masterchain coupling<br/>ADR-0006 + onx-blocks crate<br/>(merge-block case pending)"]:::done
-    G["Execution / VM<br/>ADR-0007, spec only"]:::specOnly
-    H["Consensus & validator operation<br/>ADR-0008, spec only"]:::specOnly
-    I["Networking<br/>ADR-0009–ADR-0011, spec only"]:::specOnly
-    J["Dynamic sharding<br/>ADR-0012, spec only"]:::specOnly
-    K["Economics<br/>ADR-0013, spec only"]:::specOnly
-    L["Payment channels<br/>ADR-0014, spec only"]:::specOnly
+    E["Transactions & messages<br/>ADR-0005, ADR-0018 + onx-transactions crate"]:::done
+    F["Blocks & masterchain coupling<br/>ADR-0006, ADR-0016 + onx-blocks crate"]:::done
+    G["Execution / VM<br/>ADR-0007, ADR-0017 + onx-execution crate"]:::done
+    H["Consensus & validator operation<br/>ADR-0008 + onx-consensus crate"]:::done
+    I["Networking<br/>ADR-0009–ADR-0011 + onx-networking crate"]:::done
+    J["Dynamic sharding<br/>ADR-0012 + onx-sharding crate"]:::done
+    K["Economics<br/>ADR-0013, ADR-0019 + onx-economics crate"]:::done
+    L["Payment channels<br/>ADR-0014 + onx-payment-channels crate"]:::done
 
     A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
 
     classDef done fill:#2f9e44,stroke:#2f9e44,color:#fff
-    classDef specOnly fill:#f08c00,stroke:#f08c00,color:#fff
-    classDef todo fill:#495057,stroke:#495057,color:#fff
     style Legend fill:transparent,stroke:transparent
 ```
 
-See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-grabs checklist of what to work on next, and [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow every contribution is expected to follow.
+See [`ROADMAP.md`](ROADMAP.md) for the full changelog and roadmap of what has been built, and [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow every contribution is expected to follow.
 
 ## Repository structure
 
@@ -145,21 +139,25 @@ See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-
 │   ├── onx-data-structures/ # ShardIdent, account/workchain IDs, messages, block headers
 │   ├── onx-state-model/     # Account states, Cell/BoC serialization, Merkle proofs
 │   ├── onx-transactions/    # Message admission, output-queue delivery, double-delivery prevention
-│   └── onx-blocks/          # Block structural validity, masterchain coupling, split/merge flags
+│   ├── onx-blocks/          # Block structural validity, masterchain coupling, split/merge flags
+│   ├── onx-execution/       # TVM execution engine, 46-opcode interpreter, gas metering
+│   ├── onx-payment-channels/# Payment channel arbiter, dispute resolution, off-chain state
+│   ├── onx-consensus/       # Validator election, 2/3 BFT quorum voting, finality evaluation
+│   ├── onx-networking/      # ADNL identity, RLDP datagram transport, DHT records, overlays
+│   ├── onx-sharding/        # Shard tree invariants, split/merge trigger logic, state migration
+│   └── onx-economics/       # Storage fee accrual, fee burn split, epoch inflation reward
 └── docs/
     ├── specification/       # ONX protocol specifications
     └── decisions/           # Architecture decision records (ADRs)
 ```
-
-As implementation continues, the repository will expand with further protocol crates alongside their corresponding specifications, following the sequence set out in `docs/specification/architecture.md`.
 
 ## Building and testing
 
 ONX is implemented in Rust. With a recent stable toolchain installed:
 
 ```sh
-cargo build
-cargo test
+cargo build --workspace --all-targets
+cargo test --workspace --all-targets
 ```
 
 ## Long-term goal

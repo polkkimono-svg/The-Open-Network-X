@@ -2,8 +2,8 @@
 //! split/merge flags per docs/specification/blocks.md §6.
 
 use onx_blocks::{
-    flags, validate_ordinary_successor, BlocksError, MasterchainBlockExtra, RecomputedRoots,
-    ShardEntry,
+    flags, validate_block_successor, validate_ordinary_successor, BlocksError,
+    MasterchainBlockExtra, RecomputedRoots, ShardEntry,
 };
 use onx_data_structures::{BlockHeader, ShardIdent, WorkchainIdent};
 use onx_primitives::{Uint16, Uint256, Uint32, Uint64};
@@ -19,6 +19,7 @@ fn header(shard: ShardIdent, seq_no: u32, flags_val: u16) -> BlockHeader {
         end_lt: Uint64::from(200u64),
         prev_key_block: Uint32::from(0u32),
         prev_ref_hash: Uint256([0u8; 32]),
+        prev_ref_hash_2: Uint256([0u8; 32]),
         master_ref_hash: Uint256([0u8; 32]),
         state_root_hash: Uint256([0xAAu8; 32]),
         in_msg_root_hash: Uint256([0xBBu8; 32]),
@@ -49,6 +50,33 @@ fn test_ordinary_successor_accepted() {
     let child = successor_of(&parent, 11);
     assert_eq!(
         validate_ordinary_successor(&child, &parent, roots_for(&child)),
+        Ok(())
+    );
+}
+
+#[test]
+fn test_merge_block_successor_accepted() {
+    let parent1 = header(ShardIdent::root(WorkchainIdent::BASIC), 10, 0);
+    let parent2 = header(ShardIdent::root(WorkchainIdent::BASIC), 12, 0);
+
+    let mut merge_child = header(
+        ShardIdent::root(WorkchainIdent::BASIC),
+        13,
+        flags::MERGE_RESULT,
+    );
+    merge_child.prev_ref_hash = parent1.block_hash();
+    merge_child.prev_ref_hash_2 = parent2.block_hash();
+    merge_child.gen_utime = Uint32::from(1_700_000_010u32);
+    merge_child.start_lt = Uint64::from(201u64);
+    merge_child.end_lt = Uint64::from(300u64);
+
+    assert_eq!(
+        validate_block_successor(
+            &merge_child,
+            &parent1,
+            Some(&parent2),
+            roots_for(&merge_child)
+        ),
         Ok(())
     );
 }
