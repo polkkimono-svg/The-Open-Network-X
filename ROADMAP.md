@@ -72,6 +72,32 @@ don't duplicate the work.
   per the white paper's own warning that VM semantics are hard to retrofit
   post-deployment.
 
+### 2026-09-09
+
+- **ADR-0009** — Peer identity, transport, and reliable datagram transport
+  (ADNL and RLDP). Added `docs/specification/networking-adnl.md` (partially
+  resolves **ONX-ARCH-010**).
+- **ADR-0010** — Distributed Hash Table for peer and service discovery. Added
+  `docs/specification/networking-dht.md` (partially resolves **ONX-ARCH-010**).
+- **ADR-0011** — Overlay networks and block propagation multicast. Added
+  `docs/specification/networking-overlay.md` (completes resolution of
+  **ONX-ARCH-010**).
+- **ADR-0012** — Dynamic Sharding, shard-tree invariants, split/merge
+  lifecycle, state migration, and routing continuity. Added
+  `docs/specification/sharding.md` (resolves **ONX-ARCH-007**).
+- **ADR-0013** — Economics, Onyx supply, denomination, fee/reward structures,
+  staking, and slashing penalties. Added `docs/specification/economics.md`
+  (partially resolves **ONX-ARCH-008**).
+- **ADR-0014** — Payment Channels and off-chain payment networks. Added
+  `docs/specification/payment-channels.md` (partially resolves **ONX-ARCH-009**).
+- **ADR-0015** — Project License Proposal. Added
+  `docs/decisions/ADR-0015-project-license.md` proposing Apache-2.0 adoption.
+
+### 2026-09-10
+
+- **ADR-0008** — Consensus, Validator Lifecycle, BFT Quorum, and Finality
+  Rules. Added `docs/specification/consensus.md` (resolves **ONX-ARCH-005**).
+
 ## Up for grabs
 
 Ordered by priority — earlier items unblock more of what follows. Items marked
