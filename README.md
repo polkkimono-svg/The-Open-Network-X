@@ -96,7 +96,7 @@ Specification work completed so far, with accompanying architecture decision rec
 | Economics | `docs/specification/economics.md` | `ADR-0013` |
 | Payment channels | `docs/specification/payment-channels.md` | `ADR-0014` |
 
-The `crates/onx-primitives`, `crates/onx-data-structures`, and `crates/onx-state-model` crates cover the protocol-primitives, data-structures, and state-model specifications above.
+The `crates/onx-primitives`, `crates/onx-data-structures`, and `crates/onx-state-model` crates cover the protocol-primitives, data-structures, and state-model specifications above. `crates/onx-transactions` covers message admission, output-queue delivery, and double-delivery prevention from the transactions and messages specification (hypercube routing is not yet implemented). `crates/onx-blocks` covers non-split/non-merge structural validity and masterchain coupling from the blocks specification (merge-block validation awaits a pending `BlockHeader` amendment; see `ROADMAP.md`).
 
 The diagram below shows the full specification/implementation sequence from `docs/specification/architecture.md`, and where each layer currently stands:
 
@@ -113,8 +113,8 @@ flowchart TD
     B["Protocol primitives<br/>ADR-0002 + onx-primitives crate"]:::done
     C["Data structures<br/>ADR-0002 + onx-data-structures crate"]:::done
     D["State model<br/>ADR-0003 + onx-state-model crate"]:::done
-    E["Transactions & messages<br/>ADR-0005, spec only"]:::specOnly
-    F["Blocks & masterchain coupling<br/>ADR-0006, spec only"]:::specOnly
+    E["Transactions & messages<br/>ADR-0005 + onx-transactions crate<br/>(hypercube routing pending)"]:::done
+    F["Blocks & masterchain coupling<br/>ADR-0006 + onx-blocks crate<br/>(merge-block case pending)"]:::done
     G["Execution / VM<br/>ADR-0007, spec only"]:::specOnly
     H["Consensus & validator operation<br/>ADR-0008, spec only"]:::specOnly
     I["Networking<br/>ADR-0009–ADR-0011, spec only"]:::specOnly
@@ -142,7 +142,10 @@ See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-
 ├── Cargo.toml               # Rust workspace
 ├── crates/
 │   ├── onx-primitives/      # Canonical encoding, hashing, and signatures
-│   └── onx-data-structures/ # ShardIdent, account/workchain IDs, messages, block headers
+│   ├── onx-data-structures/ # ShardIdent, account/workchain IDs, messages, block headers
+│   ├── onx-state-model/     # Account states, Cell/BoC serialization, Merkle proofs
+│   ├── onx-transactions/    # Message admission, output-queue delivery, double-delivery prevention
+│   └── onx-blocks/          # Block structural validity, masterchain coupling, split/merge flags
 └── docs/
     ├── specification/       # ONX protocol specifications
     └── decisions/           # Architecture decision records (ADRs)
@@ -169,4 +172,4 @@ Open Network X is an independent project. ONX, Open Network X, and Onyx should n
 
 ## License
 
-License selection is pending review of [ADR-0015](docs/decisions/ADR-0015-project-license.md); no `LICENSE` file has been adopted yet. Individual reference materials may have their own copyright and licensing requirements — see `whitepaper.md` for the applicable source and attribution information.
+Open Network X is licensed under the [Apache License, Version 2.0](LICENSE), as decided in [ADR-0015](docs/decisions/ADR-0015-project-license.md). Individual reference materials may have their own copyright and licensing requirements — see `whitepaper.md` for the applicable source and attribution information.

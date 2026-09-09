@@ -1,7 +1,8 @@
 # ADR-0015 — Project License Proposal
 
-**Status:** Proposed — requires maintainer review; this ADR does not select a license or add a `LICENSE` file.  
+**Status:** Accepted — Apache-2.0 adopted; see Consequences for the follow-up changes made.  
 **Date:** 2026-09-09
+**Accepted:** 2026-09-09
 
 ## Context
 
@@ -51,9 +52,12 @@ its protocol.
 
 ## Consequences
 
-If accepted, a follow-up change must add the canonical Apache-2.0 text, update
-README, and establish any required NOTICE policy. Until then, no license is
-selected and this ADR must not be treated as permission to add a `LICENSE` file.
+Accepted. The canonical Apache-2.0 text has been added as `LICENSE`, the
+`license` field in every crate's `Cargo.toml` has been updated from the
+placeholder `MIT` value to `Apache-2.0`, and the README's License section now
+points at this ADR instead of describing the license as pending review. No
+`NOTICE` file is established by this change; one may be added later if
+attribution needs arise.
 
 ## Tests
 

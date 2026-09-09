@@ -1,0 +1,15 @@
+[package]
+name = "onx-transactions"
+version = "0.1.0"
+edition = "2021"
+description = "ONX transaction and messaging semantics: external/internal message admission, output-queue-only delivery, per-account FIFO ordering, and double-delivery prevention per docs/specification/transactions.md"
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+onx-primitives = { path = "../onx-primitives" }
+onx-data-structures = { path = "../onx-data-structures" }
+onx-state-model = { path = "../onx-state-model" }
+
+[dev-dependencies]
+hex = "0.4"

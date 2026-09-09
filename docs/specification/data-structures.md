@@ -13,6 +13,8 @@
 - `whitepaper.md`, §2.5.15, §2.6.15: Block headers, masterchain coupling, and state commitments.
 - `INSTRUCTIONS.md`, §12, §14, §15, §21, §23: Serialization, dynamic sharding invariants, masterchain/workchain/shardchain boundaries, and protocol testability.
 - `docs/specification/architecture.md`: Architectural baseline requirements and open questions ONX-ARCH-002 and ONX-ARCH-003.
+- `docs/specification/blocks.md` §3.2, §4.2: Merge-block second parent reference and split/merge header flags, which `BlockHeader`'s `prev_ref_hash_2` field and `MERGE_RESULT` flag (§4.4 below) exist to support.
+- `docs/decisions/ADR-0016-merge-block-second-parent-reference.md`: Resolves **ONX-ARCH-013** and records why `prev_ref_hash_2` is a fixed field rather than a variable-length trailer.
 
 ---
 
@@ -78,23 +80,29 @@ Consensus message payload structure (`Message`):
 ```
 
 ### 4.4 Block Header Structure (`BlockHeader`)
-Fixed binary header layout:
+Fixed binary header layout (242 bytes total; amended by **ADR-0016**, resolving **ONX-ARCH-013**, to add field 11, `prev_ref_hash_2`, which the pre-amendment 206-byte layout did not have):
 ```
 1. magic_constructor : uint32  (0x1F2E3D4C)
 2. workchain_id      : int32   (4 bytes)
 3. shard_prefix      : uint64  (8 bytes)
 4. seq_no            : uint32  (4 bytes, sequence number)
-5. flags             : uint16  (2 bytes)
+5. flags             : uint16  (2 bytes; bit 4 = MERGE_RESULT, see below)
 6. gen_utime         : uint32  (4 bytes, unix timestamp)
 7. start_lt          : uint64  (8 bytes)
 8. end_lt            : uint64  (8 bytes)
 9. prev_key_block    : uint32  (4 bytes)
-10. prev_ref_hash    : uint256 (32 bytes, parent block hash)
-11. master_ref_hash  : uint256 (32 bytes, latest masterchain block hash, zero if masterchain)
-12. state_root_hash  : uint256 (32 bytes, state Bag-of-Cells root hash)
-13. in_msg_root_hash : uint256 (32 bytes, input message Merkle tree root)
-14. out_msg_root_hash: uint256 (32 bytes, output message Merkle tree root)
+10. prev_ref_hash    : uint256 (32 bytes, parent block hash; for a MERGE_RESULT block, one of its two parents)
+11. prev_ref_hash_2  : uint256 (32 bytes, second parent block hash; all-zero unless MERGE_RESULT is set)
+12. master_ref_hash  : uint256 (32 bytes, latest masterchain block hash, zero if masterchain)
+13. state_root_hash  : uint256 (32 bytes, state Bag-of-Cells root hash)
+14. in_msg_root_hash : uint256 (32 bytes, input message Merkle tree root)
+15. out_msg_root_hash: uint256 (32 bytes, output message Merkle tree root)
 ```
+
+**`prev_ref_hash_2` and `MERGE_RESULT` (added by ADR-0016):** A merge block — the first block of a shardchain formed by merging two sibling shards (`whitepaper.md` §2.7.9, `docs/specification/sharding.md` §3) — has two parents, which the pre-amendment layout's single `prev_ref_hash` field could not represent (`blocks.md` §3.2, **ONX-ARCH-013**). ADR-0016 resolves this with a fixed second field rather than a variable-length trailer, so `BlockHeader` remains a single fixed-length structure for every block:
+- Bit 4 (`0x0010`) of `flags` is `MERGE_RESULT`, assigned from the "bits 4-15... reserved" range `blocks.md` §4.2 left open for exactly this kind of future use. It marks a block as a merge block.
+- `prev_ref_hash_2` MUST be all-zero (`0x00...00`) when `MERGE_RESULT` is clear. When `MERGE_RESULT` is set, `prev_ref_hash` and `prev_ref_hash_2` are the block's two parents (order does not carry meaning: both must resolve to sibling shard blocks per `blocks.md` §3.2), and `prev_ref_hash_2` MUST NOT be all-zero.
+- This reuses the same "all-zero means not applicable" convention `master_ref_hash` already uses to distinguish masterchain from shardchain blocks, rather than a new encoding idiom.
 
 ---
 
@@ -107,6 +115,7 @@ Parsers and consensus validation modules MUST reject any object immediately if:
 4. **Header Magic Mismatch:** Block header `magic_constructor` does not equal `0x1F2E3D4C`.
 5. **Sequence Discontinuity:** Block `seq_no` is not equal to `prev_block.seq_no + 1` (or invalid split/merge sequence transition).
 6. **Truncated Data:** Buffer contains insufficient bytes for fixed-length fields or declared variable length container sizes.
+7. **Merge Parent Reference Inconsistency:** `prev_ref_hash_2` is non-zero while `MERGE_RESULT` is clear, or `prev_ref_hash_2` is all-zero while `MERGE_RESULT` is set (§4.4, ADR-0016).
 
 ---
 
@@ -121,6 +130,8 @@ Parsers and consensus validation modules MUST reject any object immediately if:
 3. **Block Header Serialization Tests:**
    - Test deterministic binary serialization and SHA-256 hash calculation for masterchain and shardchain headers.
    - Test rejection on header magic mismatch, sequence number mismatch, or truncated input.
+   - Test round-trip encoding of a `MERGE_RESULT` header with two distinct, non-zero parent references.
+   - Negative tests for `prev_ref_hash_2` non-zero with `MERGE_RESULT` clear, and `prev_ref_hash_2` all-zero with `MERGE_RESULT` set.
 4. **Message Deserialization Tests:**
    - Test canonical parsing of Internal and External messages.
    - Negative tests for malformed source/destination addresses or negative amount values.

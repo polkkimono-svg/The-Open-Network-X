@@ -138,14 +138,14 @@ These are intentionally unresolved, not defaults:
 | ONX-ARCH-003 | Which authenticated state representation and proof format will be used? | Resolved in `docs/specification/state-model.md` and ADR-0003. |
 | ONX-ARCH-004 | How are cross-shard message order, replay, and failure defined? | Resolved in `docs/specification/transactions.md` and ADR-0005. |
 | ONX-ARCH-005 | What constitutes finality, and how are invalid-block claims and corrections processed? | Resolved in `docs/specification/consensus.md` and ADR-0008. |
-| ONX-ARCH-006 | What initial workchains exist, and which VM rules apply to each? | Partially resolved: `docs/specification/execution.md` and ADR-0007 define the execution contract, gas-accounting shape, and exception set for the basic workchain's VM. Still open: the concrete instruction set (deferred to a future "TVM Instruction Set" artifact), and which VM(s) other workchains use. |
+| ONX-ARCH-006 | What initial workchains exist, and which VM rules apply to each? | Partially resolved: `docs/specification/execution.md` (ADR-0007) defines the execution contract, gas-accounting shape, and exception set, and `docs/specification/tvm-instruction-set.md` (ADR-0017) defines the concrete opcodes, stack model, and gas prices for the basic workchain's VM. Still open: which VM(s) other workchains use. |
 | ONX-ARCH-007 | What split/merge thresholds, timing, and state-transition rules apply? | Resolved in `docs/specification/sharding.md` and ADR-0012. |
 | ONX-ARCH-008 | What are Onyx supply, denomination, fee, reward, stake, and penalty rules? | Partially resolved in `docs/specification/economics.md` and ADR-0013; supply/reward/burn parameters are explicitly deferred. |
 | ONX-ARCH-009 | What are the payment-channel and payment-channel-network protocol rules and required VM primitives? | Partially resolved in `payment-channels.md` and ADR-0014; implementation remains blocked until the reserved VM primitive is concretely implemented. |
 | ONX-ARCH-010 | What are peer identity/transport, DHT, and overlay/gossip rules? | Resolved in `networking-adnl.md`, `networking-dht.md`, `networking-overlay.md` and ADR-0009–0011. |
 | ONX-ARCH-011 | Under what conditions, if any, will ONX adopt or reactivate Instant Hypercube Routing ("fast path" direct relay with Merkle proofs)? | Deferred in `docs/specification/transactions.md`; requires future Hypercube Routing ADR/spec. |
 | ONX-ARCH-012 | How are hypercube forwarding fee rates and message queue expiry timeouts calculated across heterogeneous workchains? | Future Messaging & Economics sub-specification. |
-| ONX-ARCH-013 | How does a merge block reference its two parent blocks, given `data-structures.md`'s `BlockHeader` has only one `prev_ref_hash` field? | `docs/specification/blocks.md` §3.2 identifies the gap; resolution requires a `data-structures.md` amendment and its own ADR. |
+| ONX-ARCH-013 | How does a merge block reference its two parent blocks, given `data-structures.md`'s `BlockHeader` has only one `prev_ref_hash` field? | Resolved in `docs/specification/data-structures.md` §4.4 and ADR-0016: a fixed `prev_ref_hash_2` field plus a `MERGE_RESULT` flag bit. |
 
 ## Non-goals
 
