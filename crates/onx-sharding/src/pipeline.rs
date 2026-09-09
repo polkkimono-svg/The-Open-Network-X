@@ -11,6 +11,89 @@ use onx_state_model::AccountState;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
+/// Number of masterchain blocks between a transition announcement and its
+/// commit, as fixed by `docs/specification/sharding.md` §3.
+pub const PREPARE_LEAD_BLOCKS: u64 = 8;
+/// Number of consecutive committed load samples required before a split can
+/// be announced.
+pub const SPLIT_LOAD_WINDOW_BLOCKS: usize = 256;
+/// Number of consecutive committed load samples required before a merge can
+/// be announced.
+pub const MERGE_LOAD_WINDOW_BLOCKS: usize = 1_024;
+
+/// The two masterchain-authorized shard-tree transitions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransitionKind {
+    Split,
+    Merge,
+}
+
+/// A load measurement committed by a shard block header.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LoadSample {
+    pub block_bytes: u64,
+    pub gas_used: u64,
+}
+
+/// Returns whether every sample in the committed 256-block window reaches
+/// both split thresholds. Zero limits never authorize a transition.
+pub fn split_trigger_met(samples: &[LoadSample], byte_limit: u64, gas_limit: u64) -> bool {
+    samples.len() == SPLIT_LOAD_WINDOW_BLOCKS
+        && samples.iter().all(|sample| {
+            at_least_percent(sample.block_bytes, byte_limit, 75)
+                && at_least_percent(sample.gas_used, gas_limit, 75)
+        })
+}
+
+/// Returns whether every sample in the committed 1,024-block window is below
+/// both merge thresholds. The caller must additionally ensure neither sibling
+/// has an outstanding prepare before emitting a merge prepare.
+pub fn merge_trigger_met(samples: &[LoadSample], byte_limit: u64, gas_limit: u64) -> bool {
+    samples.len() == MERGE_LOAD_WINDOW_BLOCKS
+        && samples.iter().all(|sample| {
+            at_most_percent(sample.block_bytes, byte_limit, 20)
+                && at_most_percent(sample.gas_used, gas_limit, 20)
+        })
+}
+
+/// Validates the consensus-relevant scheduling evidence for a split or merge
+/// commit. A split has exactly one prepare; a merge has one prepare from each
+/// sibling. All prepares must be exactly eight masterchain blocks old, and a
+/// validator task group may drift by at most one assignment rotation.
+pub fn validate_transition_commit(
+    kind: TransitionKind,
+    prepare_heights: &[u64],
+    commit_height: u64,
+    announced_assignment_epoch: u64,
+    commit_assignment_epoch: u64,
+) -> Result<(), ShardingError> {
+    let expected_prepares = match kind {
+        TransitionKind::Split => 1,
+        TransitionKind::Merge => 2,
+    };
+    if prepare_heights.len() != expected_prepares
+        || prepare_heights.iter().any(|height| {
+            height
+                .checked_add(PREPARE_LEAD_BLOCKS)
+                .is_none_or(|expected| expected != commit_height)
+        })
+    {
+        return Err(ShardingError::AnnouncementSequenceViolation);
+    }
+    if announced_assignment_epoch.abs_diff(commit_assignment_epoch) > 1 {
+        return Err(ShardingError::TaskGroupDriftExceeded);
+    }
+    Ok(())
+}
+
+fn at_least_percent(value: u64, limit: u64, percent: u64) -> bool {
+    limit != 0 && (value as u128) * 100 >= (limit as u128) * (percent as u128)
+}
+
+fn at_most_percent(value: u64, limit: u64, percent: u64) -> bool {
+    limit != 0 && (value as u128) * 100 <= (limit as u128) * (percent as u128)
+}
+
 /// The account state and destination-ordered pending messages owned by a
 /// single active shard at a split or merge boundary.
 #[derive(Debug, Clone, PartialEq, Eq)]

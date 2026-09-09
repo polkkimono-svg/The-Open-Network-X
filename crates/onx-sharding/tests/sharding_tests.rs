@@ -5,7 +5,9 @@ use onx_data_structures::{
 };
 use onx_primitives::{Uint128, Uint256, Uint64};
 use onx_sharding::{
-    merge_shard_states, split_shard_state, ShardState, ShardTreeNode, ShardingError,
+    merge_shard_states, merge_trigger_met, split_shard_state, split_trigger_met,
+    validate_transition_commit, LoadSample, ShardState, ShardTreeNode, ShardingError,
+    TransitionKind, MERGE_LOAD_WINDOW_BLOCKS, SPLIT_LOAD_WINDOW_BLOCKS,
 };
 use onx_state_model::AccountState;
 use std::collections::BTreeMap;
@@ -173,5 +175,50 @@ fn merge_rejects_non_sibling_shards() {
         )
         .unwrap_err(),
         ShardingError::InvalidMergeSiblings
+    );
+}
+
+#[test]
+fn load_windows_require_exact_length_and_all_samples_to_cross_threshold() {
+    let split_sample = LoadSample {
+        block_bytes: 75,
+        gas_used: 75,
+    };
+    let mut split_samples = vec![split_sample; SPLIT_LOAD_WINDOW_BLOCKS];
+    assert!(split_trigger_met(&split_samples, 100, 100));
+    split_samples[17].gas_used = 74;
+    assert!(!split_trigger_met(&split_samples, 100, 100));
+    assert!(!split_trigger_met(
+        &vec![split_sample; SPLIT_LOAD_WINDOW_BLOCKS - 1],
+        100,
+        100
+    ));
+
+    let merge_sample = LoadSample {
+        block_bytes: 20,
+        gas_used: 20,
+    };
+    let mut merge_samples = vec![merge_sample; MERGE_LOAD_WINDOW_BLOCKS];
+    assert!(merge_trigger_met(&merge_samples, 100, 100));
+    merge_samples[1].block_bytes = 21;
+    assert!(!merge_trigger_met(&merge_samples, 100, 100));
+}
+
+#[test]
+fn transition_commit_requires_exact_prepare_lead_and_bounded_assignment_drift() {
+    assert!(validate_transition_commit(TransitionKind::Split, &[92], 100, 7, 8).is_ok());
+    assert!(validate_transition_commit(TransitionKind::Merge, &[92, 92], 100, 8, 7).is_ok());
+
+    assert_eq!(
+        validate_transition_commit(TransitionKind::Split, &[93], 100, 7, 7).unwrap_err(),
+        ShardingError::AnnouncementSequenceViolation
+    );
+    assert_eq!(
+        validate_transition_commit(TransitionKind::Merge, &[92], 100, 7, 7).unwrap_err(),
+        ShardingError::AnnouncementSequenceViolation
+    );
+    assert_eq!(
+        validate_transition_commit(TransitionKind::Split, &[92], 100, 7, 9).unwrap_err(),
+        ShardingError::TaskGroupDriftExceeded
     );
 }
