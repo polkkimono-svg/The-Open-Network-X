@@ -13,3 +13,4 @@ members = [
     "crates/onx-sharding",
     "crates/onx-economics",
 ]
+exclude = ["fuzz"]

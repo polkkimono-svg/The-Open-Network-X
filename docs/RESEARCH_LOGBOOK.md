@@ -110,3 +110,11 @@ Shard transition preparation should commit only a canonical hash of the load win
 
 #### [QUESTION]
 When a block-sync client receives a shard header whose declared `master_ref_hash` is older than the masterchain block that first commits the shard header, should the sync protocol require both masterchain headers in the response, or define a compact proof format that links the two without downloading the intervening masterchain headers?
+
+### Entry #11
+
+#### [ANSWER]
+Coverage-guided fuzzing for ONX must treat parser and virtual-machine outcomes as normal results, not assertions: arbitrary bytes supplied to a Bag-of-Cells decoder, block-header decoder, or TVM interpreter may be malformed, but they must always be rejected deterministically without panicking or reading beyond their input. The TASK-018 targets therefore use bounded inputs at each protocol boundary, retain libFuzzer's generated corpus and artifacts outside the Cargo workspace, and place a finite regression run for every target in CI. Signature aggregation coverage is exercised by decoding fixed-width public-key and signature slices and passing them through `BftQuorumTracker::add_vote`; cryptographic verification failures are expected fuzz outcomes.
+
+#### [QUESTION]
+Which minimum corpus and time budget should ONX require for scheduled long-running fuzz jobs beyond the pull-request regression runs, so that coverage growth is measurable without making ordinary contributor CI impractically slow?

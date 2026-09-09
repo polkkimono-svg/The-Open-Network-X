@@ -122,6 +122,18 @@ impl BagOfCells {
         offset += Uint32::BYTE_LEN;
         let count = count_val.0 as usize;
 
+        // Every encoded cell entry has at least its 32-byte hash and 4-byte
+        // length field. Reject an impossible declared count before using it
+        // as a collection capacity: otherwise a tiny hostile input can ask
+        // the decoder to reserve gigabytes of memory.
+        const MIN_CELL_ENTRY_BYTES: usize = 32 + Uint32::BYTE_LEN;
+        let remaining = slice.len().saturating_sub(offset);
+        if count > remaining / MIN_CELL_ENTRY_BYTES {
+            return Err(StateModelError::DeserializationError(
+                "BoC cell count exceeds remaining input capacity".to_string(),
+            ));
+        }
+
         let mut cells = HashMap::with_capacity(count);
         for _ in 0..count {
             if slice.len() < offset + 36 {
