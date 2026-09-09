@@ -55,3 +55,11 @@ Cross-workchain transaction fee conversion rates and message queue expiration bo
 
 #### [QUESTION]
 How should state migration during shard splits and merges preserve atomic cross-shard message delivery order and state proof validity when accounts move between shard trees under high transaction load?
+
+Entry #5
+[ANSWER]
+State migration during shard splits and merges in ONX guarantees atomic cross-shard message delivery order and state proof validity by utilizing the masterchain block sequence as the strict coordination layer. When a shard split or merge condition triggers (per ADR-0012), the affected shard blocks flag a pending state transition over a deterministic epoch boundary defined in docs/specification/sharding.md.
+During the migration epoch, outbound messages bound for migrating accounts are held in the source shard's output queue using the old ShardIdent prefix routing until the masterchain commits the new shard block headers containing the finalized account state Merkle proofs. Cross-shard message delivery order is preserved because destination shards enforce sequential processing based on the created_lt of the source messages, which remains immutable across the split/merge boundary. State proof validity is maintained because the masterchain guarantees the new shard state roots are cryptographically linked to the pre-migration state root before unlocking the inbound message queues for the newly formed shards.
+[QUESTION]
+How does the onx-consensus crate handle validator equivocation penalties and Byzantine fault proofs during a 2/3 quorum failure when a subset of validators attempt to finalize competing block candidates on the masterchain?
+
