@@ -133,7 +133,7 @@ These are intentionally unresolved, not defaults:
 | ONX-ARCH-002 | What is the initial account-address format and supported address space? | Resolved in `docs/specification/data-structures.md` and ADR-0002. |
 | ONX-ARCH-003 | Which authenticated state representation and proof format will be used? | Resolved in `docs/specification/state-model.md` and ADR-0003. |
 | ONX-ARCH-004 | How are cross-shard message order, replay, and failure defined? | Resolved in `docs/specification/transactions.md` and ADR-0005. |
-| ONX-ARCH-005 | What constitutes finality, and how are invalid-block claims and corrections processed? | Consensus specification and ADR if an interpretation is chosen. |
+| ONX-ARCH-005 | What constitutes finality, and how are invalid-block claims and corrections processed? | Resolved in `docs/specification/consensus.md` and ADR-0008. |
 | ONX-ARCH-006 | What initial workchains exist, and which VM rules apply to each? | Partially resolved: `docs/specification/execution.md` and ADR-0007 define the execution contract, gas-accounting shape, and exception set for the basic workchain's VM. Still open: the concrete instruction set (deferred to a future "TVM Instruction Set" artifact), and which VM(s) other workchains use. |
 | ONX-ARCH-007 | What split/merge thresholds, timing, and state-transition rules apply? | Sharding specification and deterministic tests. |
 | ONX-ARCH-008 | What are Onyx supply, denomination, fee, reward, stake, and penalty rules? | Economics specification and ADRs. |
