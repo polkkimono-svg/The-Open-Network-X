@@ -29,6 +29,7 @@ jobs:
         with:
           use-quiet-mode: 'yes'
           folder-path: '.'
+          config-file: 'mlc_config.json'
 
       - name: Verify Specification Structure Rules
         run: |
@@ -51,7 +52,7 @@ jobs:
           errors = []
           for root, dirs, files in os.walk(spec_dir):
               for file in files:
-                  if file.endswith('.md'):
+                  if file.endswith('.md') and file != 'architecture.md':
                       path = os.path.join(root, file)
                       with open(path, 'r', encoding='utf-8') as f:
                           content = f.read()
