@@ -89,6 +89,7 @@ Specification work completed so far, with accompanying architecture decision rec
 | Implementation language | — | `ADR-0004` |
 | Transactions and messages | `docs/specification/transactions.md` | `ADR-0005` |
 | Blocks and masterchain coupling | `docs/specification/blocks.md` | `ADR-0006` |
+| Execution (virtual machine) | `docs/specification/execution.md` | `ADR-0007` |
 
 The `crates/onx-primitives`, `crates/onx-data-structures`, and `crates/onx-state-model` crates cover the protocol-primitives, data-structures, and state-model specifications above.
 
@@ -109,7 +110,7 @@ flowchart TD
     D["State model<br/>ADR-0003 + onx-state-model crate"]:::done
     E["Transactions & messages<br/>ADR-0005, spec only"]:::specOnly
     F["Blocks & masterchain coupling<br/>ADR-0006, spec only"]:::specOnly
-    G["Execution / VM"]:::todo
+    G["Execution / VM<br/>ADR-0007, spec only"]:::specOnly
     H["Consensus & validator operation"]:::todo
     I["Networking"]:::todo
     J["Dynamic sharding"]:::todo

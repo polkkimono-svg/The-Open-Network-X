@@ -63,6 +63,14 @@ don't duplicate the work.
   `Masterchain Block Extra` shard-hash commitment structure and the
   split/merge announcement flag bit layout now. Introduces **ONX-ARCH-013**
   (merge blocks need a second parent reference `BlockHeader` doesn't have).
+- **ADR-0007** — Execution Model, Resource Accounting, and Merkle-Proof VM
+  Primitive Reservation. Added `docs/specification/execution.md`, partially
+  resolving **ONX-ARCH-006** and **ONX-ARCH-009**. Scopes "instruction
+  semantics" to the execution contract and required semantic categories
+  (no bytecode ISA exists to draw from), and **accepts** reserving a
+  Merkle-proof/pruned-branch VM primitive now rather than deferring it,
+  per the white paper's own warning that VM semantics are hard to retrofit
+  post-deployment.
 
 ## Up for grabs
 
@@ -118,18 +126,24 @@ the answer.
       (merge-block parent references) is resolved — the non-split/non-merge
       structural validity rules could reasonably be implemented sooner,
       since they don't depend on that open question.
-- [ ] Write the **Execution (virtual machine)** specification — instruction
-      semantics, resource accounting, exceptions, deterministic contract
-      state transitions — architecture sequence item 6. Resolves part of
-      **ONX-ARCH-006** (VM rules per workchain). **(whitepaper.md §2.1.20, §5.1.9)**
-      Note explicitly: the white paper states that Merkle-proof operations
-      inside the VM (needed for the Payment channels item below) are much
-      harder to retrofit than to design in from the start (§5.1.9, echoing
-      the general warning in §2.8.16 about how rigid a blockchain's "genome"
-      becomes post-deployment) — whether or not ONX builds payment channels
-      soon, this spec should explicitly decide whether to reserve VM
-      primitives for Merkle-proof verification now, and record that decision
-      (accept, defer, or reject) rather than leaving it implicit.
+- [x] **Write the Execution (virtual machine) specification**
+      (`docs/specification/execution.md` + ADR-0007) — architecture sequence
+      item 6. Resolves part of **ONX-ARCH-006** (VM rules per workchain).
+      Defines the execution contract (inputs/outputs/gas/exceptions),
+      required arithmetic/data semantic categories, and a closed five-member
+      exception set — but explicitly defers concrete opcode-level
+      instruction encoding and gas pricing to a future "TVM Instruction Set"
+      artifact, since no bytecode-level ISA exists in the reference material
+      to draw from.
+      **Decision recorded: accept** the Merkle-proof/pruned-branch VM
+      primitive now (§3.5) — assigns a meaning to `state-model.md`'s
+      previously-undefined `Cell.is_special_flag` bit and reserves an
+      `AbsentNode` exception, unblocking **ONX-ARCH-009** (Payment channels)
+      from the Execution side without committing to payment-channel
+      semantics themselves.
+- [ ] Write the "TVM Instruction Set" specification (concrete opcodes and
+      gas price table) that `docs/specification/execution.md` §3.1 defers to
+      — required before Execution can be implemented in code.
 
 ### Later (depend on consensus existing)
 
