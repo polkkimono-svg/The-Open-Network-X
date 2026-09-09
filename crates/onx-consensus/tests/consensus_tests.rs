@@ -108,3 +108,77 @@ fn test_absolute_finality_rule() {
         true
     ));
 }
+
+#[test]
+fn election_selects_stake_weighted_set_and_returns_unlocked_funds() {
+    use onx_consensus::{run_election, CandidateValidatorSpec, ElectionConfig};
+
+    let candidates = [(1000, 200), (500, 300), (200, 100), (100, 100)]
+        .into_iter()
+        .enumerate()
+        .map(|(index, (stake, load))| CandidateValidatorSpec {
+            public_key: SecretKey::from_seed(&[(index + 1) as u8; 32])
+                .unwrap()
+                .public_key(),
+            proposed_stake: Uint64::from(stake),
+            max_load_factor: load,
+        })
+        .collect();
+    let election = run_election(
+        candidates,
+        ElectionConfig {
+            validator_cap: 3,
+            max_load_factor_scaled: 1_000,
+        },
+    )
+    .unwrap();
+
+    // The third selected proposal (200) is the cap baseline.  The first
+    // candidate is capped to 400; its excess and the unselected stake unlock.
+    assert_eq!(
+        election
+            .validators
+            .iter()
+            .map(|validator| validator.actual_stake.0)
+            .collect::<Vec<_>>(),
+        vec![400, 500, 200]
+    );
+    assert_eq!(
+        election
+            .refunds
+            .iter()
+            .map(|refund| refund.amount.0)
+            .collect::<Vec<_>>(),
+        vec![600, 0, 0, 100]
+    );
+}
+
+#[test]
+fn election_rejects_invalid_or_duplicate_candidates() {
+    use onx_consensus::{run_election, CandidateValidatorSpec, ElectionConfig};
+
+    let key = SecretKey::from_seed(&[9; 32]).unwrap().public_key();
+    let candidate = CandidateValidatorSpec {
+        public_key: key,
+        proposed_stake: Uint64::from(10),
+        max_load_factor: 100,
+    };
+    assert_eq!(
+        run_election(
+            vec![candidate.clone(), candidate],
+            ElectionConfig::default()
+        ),
+        Err(ConsensusError::DuplicateCandidate)
+    );
+    assert_eq!(
+        run_election(
+            vec![CandidateValidatorSpec {
+                public_key: key,
+                proposed_stake: Uint64::from(0),
+                max_load_factor: 100,
+            }],
+            ElectionConfig::default(),
+        ),
+        Err(ConsensusError::InvalidCandidateStake)
+    );
+}

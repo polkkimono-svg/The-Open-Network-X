@@ -6,6 +6,8 @@ pub enum EconomicsError {
     ZeroDenominator,
     SupplyCapExceeded,
     InvalidFeeRate,
+    InvalidValidatorStake,
+    DuplicateValidator,
 }
 
 impl fmt::Display for EconomicsError {
@@ -14,9 +16,18 @@ impl fmt::Display for EconomicsError {
             Self::ZeroDenominator => write!(f, "Denominator in economic rate must not be zero"),
             Self::SupplyCapExceeded => write!(f, "Total token supply cap exceeded"),
             Self::InvalidFeeRate => write!(f, "Invalid fee rate or burn ratio"),
+            Self::InvalidValidatorStake => write!(f, "Validator stake must be greater than zero"),
+            Self::DuplicateValidator => write!(f, "Validator identifier appears more than once"),
         }
     }
 }
+
+pub mod slashing;
+
+pub use slashing::{
+    apply_slash, distribute_epoch_rewards, slash_for_misconduct, SlashOutcome, SlashingReason,
+    ValidatorReward, ValidatorStake, DOUBLE_SIGN_SLASH_BPS, OFFLINE_SLASH_BPS,
+};
 
 impl std::error::Error for EconomicsError {}
 

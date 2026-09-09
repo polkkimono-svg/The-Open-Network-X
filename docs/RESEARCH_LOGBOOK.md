@@ -86,3 +86,11 @@ The migration certificate grace window should be a fixed logical-time delta comm
 
 #### [QUESTION]
 How should the masterchain encode and authenticate a migration certificate mapping old subtree hashes to new shard roots while keeping the proof compact for light clients?
+
+### Entry #8
+
+#### [ANSWER]
+A migration certificate should authenticate the old subtree root, the successor shard root, the target `ShardIdent`, the masterchain block that commits the transition, and a fixed expiry logical time. The certificate is then included in (or referenced by) the masterchain state commitment and signed under the same masterchain finality rules as the shard transition. A light client verifies the old proof to the old root, verifies the certificate's masterchain inclusion and signature, checks that the requested target prefix matches the certificate, and rejects it after the committed expiry LT. This makes the mapping compact and avoids requiring the client to replay split accounting.
+
+#### [QUESTION]
+What deterministic evidence threshold should a masterchain epoch use to classify a validator as persistently offline before applying ADR-0020's 10% frozen-stake debit: missed assigned rounds, missed signed blocks, or a stake-weighted availability window?

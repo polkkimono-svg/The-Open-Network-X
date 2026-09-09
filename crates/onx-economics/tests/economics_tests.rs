@@ -47,3 +47,45 @@ fn test_inflation_reward_calculation() {
 fn test_initial_supply_constant() {
     assert_eq!(INITIAL_SUPPLY_NANOS, 5_000_000_000 * 1_000_000_000);
 }
+
+#[test]
+fn rewards_are_proportional_and_conserve_epoch_mint() {
+    use onx_economics::{distribute_epoch_rewards, ValidatorStake};
+
+    let rewards = distribute_epoch_rewards(
+        &[
+            ValidatorStake {
+                validator_id: 9,
+                stake_nanos: 1_000_000_000,
+            },
+            ValidatorStake {
+                validator_id: 2,
+                stake_nanos: 2_000_000_000,
+            },
+        ],
+        1,
+    )
+    .unwrap();
+    assert_eq!(rewards[0].validator_id, 2);
+    assert_eq!(
+        rewards
+            .iter()
+            .map(|reward| reward.reward_nanos)
+            .sum::<u128>(),
+        52_500_000
+    );
+    assert!(rewards[0].reward_nanos > rewards[1].reward_nanos);
+}
+
+#[test]
+fn misconduct_slashing_uses_protocol_committed_penalties() {
+    use onx_economics::{slash_for_misconduct, SlashingReason};
+
+    assert_eq!(
+        slash_for_misconduct(1_000, SlashingReason::DoubleSigning).remaining_stake,
+        0
+    );
+    let offline = slash_for_misconduct(1_000, SlashingReason::PersistentOffline);
+    assert_eq!(offline.debited, 100);
+    assert_eq!(offline.remaining_stake, 900);
+}
