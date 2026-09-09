@@ -117,3 +117,94 @@ fn test_builder_stbits_packing() {
     builder.append_bits(&arr, 8).unwrap();
     assert_eq!(builder.data_bytes, vec![0xA5]);
 }
+
+fn pushint(value: i128) -> Vec<u8> {
+    let mut code = vec![0x08, 1];
+    let mut bytes = [0u8; 32];
+    if value < 0 {
+        bytes[..16].fill(0xff);
+    }
+    bytes[16..].copy_from_slice(&value.to_be_bytes());
+    code.extend(bytes);
+    code
+}
+
+#[test]
+fn expanded_arithmetic_opcodes_charge_spec_gas() {
+    for (opcode, expected) in [(0x17, 14), (0x18, 10), (0x19, 10)] {
+        let mut program = pushint(8);
+        program.extend(pushint(2));
+        program.extend([opcode, 0, 64, 1, 0x72]);
+        let result = execute(
+            Cell::new(program, vec![]).unwrap(),
+            Cell::new(vec![], vec![]).unwrap(),
+            dummy_message(),
+            dummy_context(100),
+        );
+        assert!(
+            matches!(result, ExecutionResult::Success { gas_used, .. } if gas_used == expected)
+        );
+    }
+}
+
+#[test]
+fn expanded_stack_opcodes_charge_one_gas_each() {
+    for (opcode, operands, values, expected_depth) in [
+        (0x03, vec![], vec![1, 2], 2),
+        (0x0a, vec![], vec![1, 2], 1),
+        (0x0b, vec![], vec![1, 2], 3),
+        (0x0c, vec![1, 1], vec![1, 2], 2),
+        (0x07, vec![1], vec![1, 2], 2),
+    ] {
+        let mut program = Vec::new();
+        for value in values {
+            program.extend(pushint(value));
+        }
+        program.push(opcode);
+        program.extend(operands);
+        program.push(0x72);
+        let mut interpreter = Interpreter::new(
+            Cell::new(program, vec![]).unwrap(),
+            Cell::new(vec![], vec![]).unwrap(),
+            dummy_message(),
+            dummy_context(100),
+        );
+        assert!(matches!(
+            interpreter.run(),
+            ExecutionResult::Success { gas_used: 7, .. }
+        ));
+        assert_eq!(interpreter.stack.len(), expected_depth);
+    }
+}
+
+#[test]
+fn expanded_conditional_opcodes_charge_four_gas() {
+    // IFELSE uses a zero offset so it simply chooses the following RET.
+    for program in [
+        {
+            let mut p = pushint(1);
+            p.extend([0x78, 0, 0, 0x72]);
+            p
+        },
+        {
+            let mut p = pushint(1);
+            p.extend([0x79, 0x72]);
+            p
+        },
+        {
+            let mut p = pushint(1);
+            p.extend([0x7b, 0, 0x72]);
+            p
+        },
+        vec![0x7a, 0, 0, 0x72],
+    ] {
+        let expected_gas = match program[0] {
+            0x7a => 8,
+            0x08 if program[34] == 0x79 => 5,
+            _ => 9,
+        };
+        assert!(
+            matches!(execute(Cell::new(program, vec![]).unwrap(), Cell::new(vec![], vec![]).unwrap(), dummy_message(), dummy_context(100)), ExecutionResult::Success { gas_used, .. } if gas_used == expected_gas)
+        );
+    }
+}

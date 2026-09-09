@@ -6,6 +6,7 @@ use onx_primitives::{
     PublicKey, Signature,
 };
 use onx_state_model::Cell;
+const MAX_STACK_DEPTH: usize = 1023;
 
 pub struct Interpreter {
     pub stack: Vec<StackValue>,
@@ -56,6 +57,14 @@ impl Interpreter {
             StackValue::Integer(bytes) => Ok(bytes),
             _ => Err(ExceptionKind::TypeMismatch),
         }
+    }
+
+    fn push(&mut self, value: StackValue) -> Result<(), ExceptionKind> {
+        if self.stack.len() >= MAX_STACK_DEPTH {
+            return Err(ExceptionKind::MalformedCell);
+        }
+        self.stack.push(value);
+        Ok(())
     }
 
     pub fn pop_bytes(&mut self) -> Result<Vec<u8>, ExceptionKind> {
@@ -150,15 +159,15 @@ impl Interpreter {
                     .last()
                     .ok_or(ExceptionKind::MalformedCell)?
                     .clone();
-                self.stack.push(top);
+                self.push(top)?;
             }
             // 0x03: SWAP
             0x03 => {
                 self.consume_gas(1)?;
                 let a = self.pop()?;
                 let b = self.pop()?;
-                self.stack.push(a);
-                self.stack.push(b);
+                self.push(a)?;
+                self.push(b)?;
             }
             // 0x04: OVER
             0x04 => {
@@ -168,7 +177,7 @@ impl Interpreter {
                     return Err(ExceptionKind::MalformedCell);
                 }
                 let second = self.stack[len - 2].clone();
-                self.stack.push(second);
+                self.push(second)?;
             }
             // 0x05: ROT
             0x05 => {
@@ -176,9 +185,9 @@ impl Interpreter {
                 let c = self.pop()?;
                 let b = self.pop()?;
                 let a = self.pop()?;
-                self.stack.push(b);
-                self.stack.push(c);
-                self.stack.push(a);
+                self.push(b)?;
+                self.push(c)?;
+                self.push(a)?;
             }
             // 0x06: PICK depth
             0x06 => {
@@ -189,7 +198,7 @@ impl Interpreter {
                     return Err(ExceptionKind::MalformedCell);
                 }
                 let item = self.stack[len - 1 - depth].clone();
-                self.stack.push(item);
+                self.push(item)?;
             }
             // 0x07: ROLL depth
             0x07 => {
@@ -200,7 +209,7 @@ impl Interpreter {
                     return Err(ExceptionKind::MalformedCell);
                 }
                 let item = self.stack.remove(len - 1 - depth);
-                self.stack.push(item);
+                self.push(item)?;
             }
             // 0x08: PUSHINT signed, value[32]
             0x08 => {
@@ -209,7 +218,7 @@ impl Interpreter {
                 let bytes = self.read_bytes_exact(32)?;
                 let mut arr = [0u8; 32];
                 arr.copy_from_slice(&bytes);
-                self.stack.push(StackValue::Integer(arr));
+                self.push(StackValue::Integer(arr))?;
             }
             // 0x09: PUSHBYTES len[uint16], bytes
             0x09 => {
@@ -217,7 +226,43 @@ impl Interpreter {
                 let gas_cost = 1 + len.div_ceil(32);
                 self.consume_gas(gas_cost as u64)?;
                 let bytes = self.read_bytes_exact(len)?;
-                self.stack.push(StackValue::Bytes(bytes));
+                self.push(StackValue::Bytes(bytes))?;
+            }
+            // 0x0A: NIP, (a, b) -> (b)
+            0x0A => {
+                self.consume_gas(1)?;
+                if self.stack.len() < 2 {
+                    return Err(ExceptionKind::MalformedCell);
+                }
+                let top = self.pop()?;
+                self.pop()?;
+                self.push(top)?;
+            }
+            // 0x0B: TUCK, (a, b) -> (b, a, b)
+            0x0B => {
+                self.consume_gas(1)?;
+                if self.stack.len() < 2 {
+                    return Err(ExceptionKind::MalformedCell);
+                }
+                let b = self.pop()?;
+                let a = self.pop()?;
+                self.push(b.clone())?;
+                self.push(a)?;
+                self.push(b)?;
+            }
+            // 0x0C: BLKSWAP left:uint8, right:uint8. Swap adjacent top blocks.
+            0x0C => {
+                self.consume_gas(1)?;
+                let left = self.read_uint8()? as usize;
+                let right = self.read_uint8()? as usize;
+                let count = left
+                    .checked_add(right)
+                    .ok_or(ExceptionKind::MalformedCell)?;
+                if left == 0 || right == 0 || self.stack.len() < count {
+                    return Err(ExceptionKind::MalformedCell);
+                }
+                let start = self.stack.len() - count;
+                self.stack[start..].rotate_left(left);
             }
             // Arithmetic 0x10-0x15
             0x10..=0x15 => {
@@ -236,26 +281,30 @@ impl Interpreter {
                         // ADD
                         let b = StackValue::Integer(self.pop_integer()?).to_i128()?;
                         let a = StackValue::Integer(self.pop_integer()?).to_i128()?;
-                        let res = a.wrapping_add(b);
-                        self.stack.push(StackValue::from_i128(res));
+                        let res = a.checked_add(b).ok_or(ExceptionKind::IntegerOverflow)?;
+                        self.push(StackValue::from_i128(res))?;
                     }
                     0x11 => {
                         // SUB
                         let b = StackValue::Integer(self.pop_integer()?).to_i128()?;
                         let a = StackValue::Integer(self.pop_integer()?).to_i128()?;
-                        let res = a.wrapping_sub(b);
-                        self.stack.push(StackValue::from_i128(res));
+                        let res = a.checked_sub(b).ok_or(ExceptionKind::IntegerOverflow)?;
+                        self.push(StackValue::from_i128(res))?;
                     }
                     0x12 => {
                         // NEG
                         let a = StackValue::Integer(self.pop_integer()?).to_i128()?;
-                        self.stack.push(StackValue::from_i128(a.wrapping_neg()));
+                        self.push(StackValue::from_i128(
+                            a.checked_neg().ok_or(ExceptionKind::IntegerOverflow)?,
+                        ))?;
                     }
                     0x13 => {
                         // MUL
                         let b = StackValue::Integer(self.pop_integer()?).to_i128()?;
                         let a = StackValue::Integer(self.pop_integer()?).to_i128()?;
-                        self.stack.push(StackValue::from_i128(a.wrapping_mul(b)));
+                        self.push(StackValue::from_i128(
+                            a.checked_mul(b).ok_or(ExceptionKind::IntegerOverflow)?,
+                        ))?;
                     }
                     0x14 => {
                         // DIVMOD
@@ -266,8 +315,8 @@ impl Interpreter {
                         }
                         let q = a / b;
                         let r = a % b;
-                        self.stack.push(StackValue::from_i128(q));
-                        self.stack.push(StackValue::from_i128(r));
+                        self.push(StackValue::from_i128(q))?;
+                        self.push(StackValue::from_i128(r))?;
                     }
                     0x15 => {
                         // CMP
@@ -280,7 +329,7 @@ impl Interpreter {
                         } else {
                             0
                         };
-                        self.stack.push(StackValue::from_i128(r));
+                        self.push(StackValue::from_i128(r))?;
                     }
                     _ => unreachable!(),
                 }
@@ -290,8 +339,65 @@ impl Interpreter {
                 self.consume_gas(4)?;
                 let a = self.pop_integer()?;
                 let is_zero = a == [0u8; 32];
-                self.stack
-                    .push(StackValue::from_i128(if is_zero { 1 } else { 0 }));
+                self.push(StackValue::from_i128(if is_zero { 1 } else { 0 }))?;
+            }
+            // Extended signed-integer arithmetic.  These use the same width/flavor
+            // operands and overflow rules as the baseline arithmetic family.
+            0x17..=0x19 => {
+                self.consume_gas(if opcode == 0x17 { 8 } else { 4 })?;
+                let width = self.read_uint16()?;
+                let flavor = self.read_uint8()?;
+                if width == 0 || width > 128 || flavor > 2 {
+                    return Err(ExceptionKind::MalformedCell);
+                }
+                let b = StackValue::Integer(self.pop_integer()?).to_i128()?;
+                let a = StackValue::Integer(self.pop_integer()?).to_i128()?;
+                let result = match opcode {
+                    // DIV returns only the quotient; DIVMOD remains available at 0x14.
+                    0x17 => {
+                        if b == 0 {
+                            return Err(ExceptionKind::IntegerOverflow);
+                        }
+                        a.checked_div(b).ok_or(ExceptionKind::IntegerOverflow)?
+                    }
+                    0x18 => {
+                        if b < 0 || b >= width as i128 {
+                            return Err(ExceptionKind::IntegerOverflow);
+                        }
+                        a.checked_shl(b as u32)
+                            .ok_or(ExceptionKind::IntegerOverflow)?
+                    }
+                    0x19 => {
+                        if b < 0 || b >= width as i128 {
+                            return Err(ExceptionKind::IntegerOverflow);
+                        }
+                        a >> b
+                    }
+                    _ => unreachable!(),
+                };
+                let limit = 1i128
+                    .checked_shl(width as u32 - 1)
+                    .ok_or(ExceptionKind::IntegerOverflow)?;
+                let fits = match flavor {
+                    0 => {
+                        result >= 0
+                            && result
+                                < limit.checked_mul(2).ok_or(ExceptionKind::IntegerOverflow)?
+                    }
+                    1 => result >= -limit && result < limit,
+                    2 => true,
+                    _ => unreachable!(),
+                };
+                if !fits {
+                    return Err(ExceptionKind::IntegerOverflow);
+                }
+                let result = if flavor == 2 {
+                    let modulus = limit.checked_mul(2).ok_or(ExceptionKind::IntegerOverflow)?;
+                    result.rem_euclid(modulus)
+                } else {
+                    result
+                };
+                self.push(StackValue::from_i128(result))?;
             }
             0x20 => {
                 // CONV width, signed
@@ -299,14 +405,14 @@ impl Interpreter {
                 let _width = self.read_uint16()?;
                 let _signed = self.read_uint8()?;
                 let a = self.pop_integer()?;
-                self.stack.push(StackValue::Integer(a));
+                self.push(StackValue::Integer(a))?;
             }
             // Byte/bit string operations 0x30-0x33
             0x30 => {
                 // BYTELEN
                 self.consume_gas(1)?;
                 let bytes = self.pop_bytes()?;
-                self.stack.push(StackValue::from_i128(bytes.len() as i128));
+                self.push(StackValue::from_i128(bytes.len() as i128))?;
             }
             0x31 => {
                 // CONCAT
@@ -316,7 +422,7 @@ impl Interpreter {
                 self.consume_gas(4 + total_len.div_ceil(32) as u64)?;
                 let mut res = a;
                 res.extend(b);
-                self.stack.push(StackValue::Bytes(res));
+                self.push(StackValue::Bytes(res))?;
             }
             0x32 => {
                 // SUBBYTES
@@ -327,8 +433,7 @@ impl Interpreter {
                 if offset + len > bytes.len() {
                     return Err(ExceptionKind::MalformedCell);
                 }
-                self.stack
-                    .push(StackValue::Bytes(bytes[offset..offset + len].to_vec()));
+                self.push(StackValue::Bytes(bytes[offset..offset + len].to_vec()))?;
             }
             0x33 => {
                 // BYTEEQ
@@ -336,14 +441,13 @@ impl Interpreter {
                 let a = self.pop_bytes()?;
                 let min_len = a.len().min(b.len());
                 self.consume_gas(1 + min_len.div_ceil(32) as u64)?;
-                self.stack
-                    .push(StackValue::from_i128(if a == b { 1 } else { 0 }));
+                self.push(StackValue::from_i128(if a == b { 1 } else { 0 }))?;
             }
             // Cell access 0x40-0x4C
             0x40 => {
                 // NEWC
                 self.consume_gas(10)?;
-                self.stack.push(StackValue::Builder(Builder::default()));
+                self.push(StackValue::Builder(Builder::default()))?;
             }
             0x41 => {
                 // ENDC
@@ -352,7 +456,7 @@ impl Interpreter {
                 let cell_refs = builder.references.iter().map(|c| c.hash()).collect();
                 let cell = Cell::new(builder.data_bytes, cell_refs)
                     .map_err(|_| ExceptionKind::MalformedCell)?;
-                self.stack.push(StackValue::Cell(cell));
+                self.push(StackValue::Cell(cell))?;
             }
             0x42 => {
                 // STBITS width, signed
@@ -362,7 +466,7 @@ impl Interpreter {
                 let val_bytes = self.pop_integer()?;
                 let mut builder = self.pop_builder()?;
                 builder.append_bits(&val_bytes, width)?;
-                self.stack.push(StackValue::Builder(builder));
+                self.push(StackValue::Builder(builder))?;
             }
             0x43 => {
                 // STREF
@@ -373,7 +477,7 @@ impl Interpreter {
                     return Err(ExceptionKind::MalformedCell);
                 }
                 builder.references.push(cell);
-                self.stack.push(StackValue::Builder(builder));
+                self.push(StackValue::Builder(builder))?;
             }
             0x44 => {
                 // STBYTES
@@ -384,7 +488,7 @@ impl Interpreter {
                     return Err(ExceptionKind::MalformedCell);
                 }
                 builder.data_bytes.extend(bytes);
-                self.stack.push(StackValue::Builder(builder));
+                self.push(StackValue::Builder(builder))?;
             }
             0x45 => {
                 // CTOS
@@ -393,7 +497,7 @@ impl Interpreter {
                 if cell.is_special() {
                     return Err(ExceptionKind::AbsentNode);
                 }
-                self.stack.push(StackValue::Slice(Slice::new(cell)));
+                self.push(StackValue::Slice(Slice::new(cell)))?;
             }
             0x46 => {
                 // LDU width
@@ -401,8 +505,8 @@ impl Interpreter {
                 let width = self.read_uint16()? as usize;
                 let mut slice = self.pop_slice()?;
                 let val_bytes = slice.read_bits(width)?;
-                self.stack.push(StackValue::Slice(slice));
-                self.stack.push(StackValue::Integer(val_bytes));
+                self.push(StackValue::Slice(slice))?;
+                self.push(StackValue::Integer(val_bytes))?;
             }
             0x47 => {
                 // LDI width
@@ -410,8 +514,8 @@ impl Interpreter {
                 let width = self.read_uint16()? as usize;
                 let mut slice = self.pop_slice()?;
                 let val_bytes = slice.read_bits(width)?;
-                self.stack.push(StackValue::Slice(slice));
-                self.stack.push(StackValue::Integer(val_bytes));
+                self.push(StackValue::Slice(slice))?;
+                self.push(StackValue::Integer(val_bytes))?;
             }
             0x48 => {
                 // LDREF
@@ -427,37 +531,33 @@ impl Interpreter {
                     Cell::new(vec![], vec![ref_hash]).unwrap()
                 };
                 slice.ref_offset += 1;
-                self.stack.push(StackValue::Slice(slice));
-                self.stack.push(StackValue::Cell(ref_cell));
+                self.push(StackValue::Slice(slice))?;
+                self.push(StackValue::Cell(ref_cell))?;
             }
             0x49 => {
                 // ISEXOTIC
                 self.consume_gas(10)?;
                 let cell = self.pop_cell()?;
-                self.stack
-                    .push(StackValue::from_i128(if cell.is_special() { 1 } else { 0 }));
+                self.push(StackValue::from_i128(if cell.is_special() { 1 } else { 0 }))?;
             }
             0x4A => {
                 // SEMPTY
                 self.consume_gas(1)?;
                 let slice = self.pop_slice()?;
                 let empty = slice.remaining_bits() == 0 && slice.remaining_refs() == 0;
-                self.stack
-                    .push(StackValue::from_i128(if empty { 1 } else { 0 }));
+                self.push(StackValue::from_i128(if empty { 1 } else { 0 }))?;
             }
             0x4B => {
                 // SBITS
                 self.consume_gas(1)?;
                 let slice = self.pop_slice()?;
-                self.stack
-                    .push(StackValue::from_i128(slice.remaining_bits() as i128));
+                self.push(StackValue::from_i128(slice.remaining_bits() as i128))?;
             }
             0x4C => {
                 // SREFS
                 self.consume_gas(1)?;
                 let slice = self.pop_slice()?;
-                self.stack
-                    .push(StackValue::from_i128(slice.remaining_refs() as i128));
+                self.push(StackValue::from_i128(slice.remaining_refs() as i128))?;
             }
             // Cryptographic 0x60-0x62
             0x60 => {
@@ -466,14 +566,14 @@ impl Interpreter {
                 let bytes = self.pop_bytes()?;
                 let tag = DomainTag::from_ascii("ONX_EXEC_HASH_V1");
                 let hash = domain_hash(&tag, &bytes);
-                self.stack.push(StackValue::Integer(hash));
+                self.push(StackValue::Integer(hash))?;
             }
             0x61 => {
                 // HASHCELL
                 self.consume_gas(200)?;
                 let cell = self.pop_cell()?;
                 let hash = cell.hash();
-                self.stack.push(StackValue::Integer(hash));
+                self.push(StackValue::Integer(hash))?;
             }
             0x62 => {
                 // CHKSIGNU
@@ -491,8 +591,7 @@ impl Interpreter {
                 } else {
                     false
                 };
-                self.stack
-                    .push(StackValue::from_i128(if valid { 1 } else { 0 }));
+                self.push(StackValue::from_i128(if valid { 1 } else { 0 }))?;
             }
             // Control flow 0x70-0x71, 0x73-0x76
             0x70 | 0x71 | 0x73 | 0x74 | 0x75 | 0x76 => {
@@ -540,6 +639,58 @@ impl Interpreter {
                     _ => return Err(ExceptionKind::MalformedCell),
                 };
                 return Err(kind);
+            }
+            // 0x78: IFELSE true_offset:int8, false_offset:int8. Offsets are relative
+            // to the byte immediately after the instruction.
+            0x78 => {
+                self.consume_gas(4)?;
+                let true_offset = self.read_uint8()? as i8;
+                let false_offset = self.read_uint8()? as i8;
+                let condition = StackValue::Integer(self.pop_integer()?).to_i128()? != 0;
+                let offset = if condition { true_offset } else { false_offset };
+                self.pc_bits = self
+                    .pc_bits
+                    .checked_add_signed((offset as isize) * 8)
+                    .filter(|pc| *pc <= self.current_code.data_bytes().len() * 8)
+                    .ok_or(ExceptionKind::MalformedCell)?;
+            }
+            // 0x79: IFRET. Return from the current continuation if the condition is nonzero.
+            0x79 => {
+                self.consume_gas(4)?;
+                if StackValue::Integer(self.pop_integer()?).to_i128()? != 0 {
+                    if let Some((code, pc)) = self.call_stack.pop() {
+                        self.current_code = code;
+                        self.pc_bits = pc;
+                    } else {
+                        return Ok(false);
+                    }
+                }
+            }
+            // 0x7A: REPEAT count:uint8, offset:int8. Execute the preceding byte-aligned
+            // block `count` times by re-entering it; a zero count is a no-op.
+            0x7A => {
+                self.consume_gas(4)?;
+                let count = self.read_uint8()?;
+                let offset = self.read_uint8()? as i8;
+                if count > 0 {
+                    self.pc_bits = self
+                        .pc_bits
+                        .checked_add_signed((offset as isize) * 8)
+                        .filter(|pc| *pc <= self.current_code.data_bytes().len() * 8)
+                        .ok_or(ExceptionKind::MalformedCell)?;
+                }
+            }
+            // 0x7B: UNTIL offset:int8. Re-enter the preceding block while the condition is zero.
+            0x7B => {
+                self.consume_gas(4)?;
+                let offset = self.read_uint8()? as i8;
+                if StackValue::Integer(self.pop_integer()?).to_i128()? == 0 {
+                    self.pc_bits = self
+                        .pc_bits
+                        .checked_add_signed((offset as isize) * 8)
+                        .filter(|pc| *pc <= self.current_code.data_bytes().len() * 8)
+                        .ok_or(ExceptionKind::MalformedCell)?;
+                }
             }
             _ => return Err(ExceptionKind::MalformedCell),
         }
