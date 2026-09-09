@@ -10,8 +10,10 @@
 pub mod error;
 pub mod flags;
 pub mod masterchain;
+pub mod sync;
 pub mod validity;
 
 pub use error::BlocksError;
 pub use masterchain::{validate_master_ref, MasterchainBlockExtra, ShardEntry};
+pub use sync::{BlockSyncEngine, SyncCandidate, SyncError};
 pub use validity::{validate_block_successor, validate_ordinary_successor, RecomputedRoots};
