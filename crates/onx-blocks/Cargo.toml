@@ -1,8 +1,8 @@
 [package]
-name = "onx-state-model"
+name = "onx-blocks"
 version = "0.1.0"
 edition = "2021"
-description = "ONX state model, account states/lifecycle, Cell hashing, Bag-of-Cells (BoC), and Merkle proofs per docs/specification/state-model.md"
+description = "ONX block structural validity, masterchain coupling, and split/merge announcement flags per docs/specification/blocks.md"
 license = "Apache-2.0"
 publish = false
 
@@ -12,4 +12,3 @@ onx-data-structures = { path = "../onx-data-structures" }
 
 [dev-dependencies]
 hex = "0.4"
-proptest = "1.6"

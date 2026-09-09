@@ -340,10 +340,6 @@ corresponding to a data structure encoding a (partial) map **2**<sup>_n_</sup> â
 
 
 
-20 
-
-2.3. Blockchain State, Accounts and Hashmaps 
-
 or 
 
 

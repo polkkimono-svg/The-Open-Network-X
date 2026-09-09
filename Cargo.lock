@@ -289,6 +289,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
+name = "onx-blocks"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-data-structures",
+ "onx-primitives",
+]
+
+[[package]]
 name = "onx-data-structures"
 version = "0.1.0"
 dependencies = [
@@ -313,6 +322,16 @@ dependencies = [
  "onx-data-structures",
  "onx-primitives",
  "proptest",
+]
+
+[[package]]
+name = "onx-transactions"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "onx-data-structures",
+ "onx-primitives",
+ "onx-state-model",
 ]
 
 [[package]]
