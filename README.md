@@ -1,6 +1,6 @@
 # Open Network X
 
-**Open Network X (ONX)** is an independent blockchain implementation project inspired by the architecture and technical vision described in the original Telegram Open Network (TON) white paper.
+**Open Network X (ONX)** is an independent blockchain implementation project inspired by the architecture and technical vision described in the original The Open Network (TON) white paper.
 
 ONX explores, reconstructs, and implements that vision independently and from first principles. It is not the TON blockchain, is not an official continuation of TON, and is not intended to replace the existing TON network or its community. The native currency of Open Network X is **Onyx**.
 
