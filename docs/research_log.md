@@ -117,3 +117,17 @@ Automated log of commits tracked against whitepaper.md.
   - crates/onx-sharding/tests/sharding_tests.rs
   - docs/RESEARCH_LOGBOOK.md
 
+## Commit 6ca54fd32be4aa470606c07894de2fc63351ed2a
+
+- **Timestamp:** 2026-09-09T21:48:51Z
+- **Event:** push
+- **Modified files:**
+  - crates/onx-consensus/src/election.rs
+  - crates/onx-consensus/src/lib.rs
+  - crates/onx-consensus/tests/consensus_tests.rs
+  - crates/onx-economics/src/lib.rs
+  - crates/onx-economics/src/slashing.rs
+  - crates/onx-economics/tests/economics_tests.rs
+  - docs/RESEARCH_LOGBOOK.md
+  - docs/decisions/ADR-0020-validator-slashing-and-reward-distribution.md
+
