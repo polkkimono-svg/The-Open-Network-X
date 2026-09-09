@@ -202,3 +202,99 @@ fn test_truncated_and_trailing_bytes_rejection() {
         Err(DataStructureError::TrailingBytes { remaining: 1 })
     ));
 }
+
+#[test]
+fn test_address_shard_mismatch_validation() {
+    let wc = WorkchainIdent::BASIC;
+
+    // Shard 0: prefix '0' (MSB 0)
+    let shard_0 = ShardIdent::from_prefix_bits(wc, 0x0000_0000_0000_0000, 1).unwrap();
+    // Shard 1: prefix '1' (MSB 1)
+    let shard_1 = ShardIdent::from_prefix_bits(wc, 0x8000_0000_0000_0000, 1).unwrap();
+
+    let acct_0 = AccountId::from_bytes([0x00; 32]); // MSB is 0
+    let mut acct_1_bytes = [0x00; 32];
+    acct_1_bytes[0] = 0x80; // MSB is 1
+    let acct_1 = AccountId::from_bytes(acct_1_bytes);
+
+    // 1. ShardIdent::validate_account_id
+    assert_eq!(shard_0.validate_account_id(&acct_0), Ok(()));
+    assert_eq!(
+        shard_0.validate_account_id(&acct_1),
+        Err(DataStructureError::AddressShardMismatch)
+    );
+    assert_eq!(shard_1.validate_account_id(&acct_1), Ok(()));
+    assert_eq!(
+        shard_1.validate_account_id(&acct_0),
+        Err(DataStructureError::AddressShardMismatch)
+    );
+
+    // 2. FullAddress::validate_against_shard
+    let addr_0 = FullAddress::new(wc, acct_0);
+    let addr_1 = FullAddress::new(wc, acct_1);
+    let addr_wc_mismatch = FullAddress::new(WorkchainIdent::MASTERCHAIN, acct_0);
+
+    assert_eq!(addr_0.validate_against_shard(&shard_0), Ok(()));
+    assert_eq!(
+        addr_1.validate_against_shard(&shard_0),
+        Err(DataStructureError::AddressShardMismatch)
+    );
+    assert_eq!(
+        addr_wc_mismatch.validate_against_shard(&shard_0),
+        Err(DataStructureError::AddressShardMismatch)
+    );
+
+    // 3. Message::validate_against_shard
+    let msg_internal = Message {
+        msg_type: MessageType::Internal,
+        src_address: addr_0,
+        dest_address: addr_1,
+        amount_nanos: Uint128::from(500u128),
+        extra_currencies: vec![],
+        created_lt: Uint64::from(100u64),
+        body_cell_hash: Uint256([0x12; 32]),
+    };
+
+    // Internal msg src is in shard_0, dest is in shard_1. Both shard_0 and shard_1 accept it.
+    assert_eq!(msg_internal.validate_against_shard(&shard_0), Ok(()));
+    assert_eq!(msg_internal.validate_against_shard(&shard_1), Ok(()));
+
+    // Internal msg where neither src nor dest matches shard (e.g. Masterchain shard)
+    let master_shard = ShardIdent::root(WorkchainIdent::MASTERCHAIN);
+    assert_eq!(
+        msg_internal.validate_against_shard(&master_shard),
+        Err(DataStructureError::AddressShardMismatch)
+    );
+
+    // External Inbound: requires dest_address to match
+    let msg_ext_in = Message {
+        msg_type: MessageType::ExternalInbound,
+        src_address: addr_0,
+        dest_address: addr_1,
+        amount_nanos: Uint128::from(0u128),
+        extra_currencies: vec![],
+        created_lt: Uint64::from(101u64),
+        body_cell_hash: Uint256([0x34; 32]),
+    };
+    assert_eq!(msg_ext_in.validate_against_shard(&shard_1), Ok(()));
+    assert_eq!(
+        msg_ext_in.validate_against_shard(&shard_0),
+        Err(DataStructureError::AddressShardMismatch)
+    );
+
+    // External Outbound: requires src_address to match
+    let msg_ext_out = Message {
+        msg_type: MessageType::ExternalOutbound,
+        src_address: addr_0,
+        dest_address: addr_1,
+        amount_nanos: Uint128::from(0u128),
+        extra_currencies: vec![],
+        created_lt: Uint64::from(102u64),
+        body_cell_hash: Uint256([0x56; 32]),
+    };
+    assert_eq!(msg_ext_out.validate_against_shard(&shard_0), Ok(()));
+    assert_eq!(
+        msg_ext_out.validate_against_shard(&shard_1),
+        Err(DataStructureError::AddressShardMismatch)
+    );
+}

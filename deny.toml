@@ -8,3 +8,9 @@ allow = [
     "Unicode-3.0",
 ]
 confidence-threshold = 0.8
+
+[[licenses.clarify]]
+name = "wasi"
+version = "*"
+expression = "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
+license-files = []

@@ -1,6 +1,6 @@
 //! Shard Identifier implementation per docs/specification/data-structures.md §4.2.
 
-use crate::address::{AccountId, WorkchainIdent};
+use crate::address::{AccountId, FullAddress, WorkchainIdent};
 use crate::error::DataStructureError;
 use onx_primitives::Uint64;
 
@@ -111,6 +111,24 @@ impl ShardIdent {
         let acct_bits = acct_msb_u64 & mask;
 
         Ok(shard_bits == acct_bits)
+    }
+
+    /// Validates that an AccountId belongs to this shard prefix, returning `AddressShardMismatch` on mismatch.
+    pub fn validate_account_id(&self, account_id: &AccountId) -> Result<(), DataStructureError> {
+        if self.contains_account(account_id)? {
+            Ok(())
+        } else {
+            Err(DataStructureError::AddressShardMismatch)
+        }
+    }
+
+    /// Validates that a FullAddress belongs to this shard (workchain ID match and account ID prefix match),
+    /// returning `AddressShardMismatch` on mismatch.
+    pub fn validate_full_address(&self, address: &FullAddress) -> Result<(), DataStructureError> {
+        if self.workchain_id != address.workchain_id {
+            return Err(DataStructureError::AddressShardMismatch);
+        }
+        self.validate_account_id(&address.account_id)
     }
 
     /// Serializes ShardIdent to 12 bytes.

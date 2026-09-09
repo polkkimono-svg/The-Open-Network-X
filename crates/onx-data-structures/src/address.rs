@@ -1,6 +1,7 @@
 //! Workchain, account, and address identifiers per docs/specification/data-structures.md §4.1.
 
 use crate::error::DataStructureError;
+use crate::shard::ShardIdent;
 use onx_primitives::{Int32, Uint256};
 
 /// Workchain identifier (32-bit signed big-endian integer).
@@ -114,5 +115,10 @@ impl FullAddress {
             workchain_id,
             account_id,
         })
+    }
+
+    /// Validates that this full address matches the given shard, returning `AddressShardMismatch` on mismatch.
+    pub fn validate_against_shard(&self, shard: &ShardIdent) -> Result<(), DataStructureError> {
+        shard.validate_full_address(self)
     }
 }
