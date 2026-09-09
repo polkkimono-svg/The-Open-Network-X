@@ -56,6 +56,13 @@ don't duplicate the work.
 - **ADR-0005** — Transactions, Messaging, Hypercube Routing, and Multi-Currency Model.
   Added `docs/specification/transactions.md` (resolves **ONX-ARCH-004**, introduces
   **ONX-ARCH-011** and **ONX-ARCH-012**).
+- **ADR-0006** — Block Validity, Parent References, and Masterchain Coupling.
+  Added `docs/specification/blocks.md`, separating structural block validity
+  from consensus/reliability (deferred to ONX-ARCH-005) and from split/merge
+  trigger conditions (deferred to ONX-ARCH-007), while defining the
+  `Masterchain Block Extra` shard-hash commitment structure and the
+  split/merge announcement flag bit layout now. Introduces **ONX-ARCH-013**
+  (merge blocks need a second parent reference `BlockHeader` doesn't have).
 
 ## Up for grabs
 
@@ -92,13 +99,25 @@ the answer.
       `docs/specification/transactions.md` (ADR-0005) exists. Includes updating
       `crates/onx-data-structures`' `Message` type to add the `extra_currencies`
       field the spec now formalizes (§4.1) — its wire layout currently omits it.
-- [ ] Write the **Blocks and masterchain coupling** specification
-      (block validity, parent references, masterchain references,
-      canonicality) — architecture sequence item 5. **(whitepaper.md §2.6, §2.7.3)**
-      Block headers also need to carry the split/merge announcement flags
-      (split/merge prepare and commit, §2.7.3) described under Dynamic
-      sharding below — the two specs should cross-reference each other on
-      this rather than each silently assuming the other handles it.
+- [x] **Write the Blocks and masterchain coupling specification**
+      (`docs/specification/blocks.md` + ADR-0006) — architecture sequence
+      item 5. Separates structural block validity (deterministic, defined
+      now) from BFT/consensus validity and reliability (deferred to the
+      future Consensus spec, ONX-ARCH-005). Defines the `Masterchain Block
+      Extra` shard-hash commitment structure, and assigns the four
+      split/merge announcement flags (`SPLIT_PREPARE`/`SPLIT_COMMIT`/
+      `MERGE_PREPARE`/`MERGE_COMMIT`) bit positions within `BlockHeader.flags`
+      — but explicitly defers their load-based trigger conditions and
+      validator task-group reassignment to the future Dynamic Sharding spec
+      (ONX-ARCH-007), so neither spec silently assumes the other owns them.
+      Surfaced a real gap as **ONX-ARCH-013**: `data-structures.md`'s
+      `BlockHeader` has only one `prev_ref_hash` field, but a merge block
+      needs two parent references — not resolved here, tracked as an open
+      question requiring its own `data-structures.md` amendment.
+- [ ] Implement `docs/specification/blocks.md` in code once ONX-ARCH-013
+      (merge-block parent references) is resolved — the non-split/non-merge
+      structural validity rules could reasonably be implemented sooner,
+      since they don't depend on that open question.
 - [ ] Write the **Execution (virtual machine)** specification — instruction
       semantics, resource accounting, exceptions, deterministic contract
       state transitions — architecture sequence item 6. Resolves part of

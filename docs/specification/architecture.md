@@ -141,6 +141,7 @@ These are intentionally unresolved, not defaults:
 | ONX-ARCH-010 | What are the peer-identity/transport (ADNL), distributed-hash-table (DHT), and overlay/gossip protocol rules nodes use to find each other and propagate blocks? | Networking specification(s); may be split into sub-specifications per component. |
 | ONX-ARCH-011 | Under what conditions, if any, will ONX adopt or reactivate Instant Hypercube Routing ("fast path" direct relay with Merkle proofs)? | Deferred in `docs/specification/transactions.md`; requires future Hypercube Routing ADR/spec. |
 | ONX-ARCH-012 | How are hypercube forwarding fee rates and message queue expiry timeouts calculated across heterogeneous workchains? | Future Messaging & Economics sub-specification. |
+| ONX-ARCH-013 | How does a merge block reference its two parent blocks, given `data-structures.md`'s `BlockHeader` has only one `prev_ref_hash` field? | `docs/specification/blocks.md` §3.2 identifies the gap; resolution requires a `data-structures.md` amendment and its own ADR. |
 
 ## Non-goals
 
