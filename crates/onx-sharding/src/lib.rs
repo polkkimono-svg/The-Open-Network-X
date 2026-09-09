@@ -14,6 +14,8 @@ pub enum ShardingError {
     AnnouncementSequenceViolation,
     TaskGroupDriftExceeded,
     InvalidMergeSiblings,
+    AccountOutsideShard,
+    MessageOutsideShard,
 }
 
 impl fmt::Display for ShardingError {
@@ -34,9 +36,20 @@ impl fmt::Display for ShardingError {
                 "Validator task-group assignment drift exceeds 1 rotation"
             ),
             Self::InvalidMergeSiblings => write!(f, "Merging shards are not valid binary siblings"),
+            Self::AccountOutsideShard => write!(f, "Account does not belong to the source shard"),
+            Self::MessageOutsideShard => {
+                write!(
+                    f,
+                    "Pending message destination does not belong to the source shard"
+                )
+            }
         }
     }
 }
+
+pub mod pipeline;
+
+pub use pipeline::{merge_shard_states, split_shard_state, ShardState};
 
 impl std::error::Error for ShardingError {}
 
