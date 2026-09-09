@@ -174,3 +174,13 @@ Automated log of commits tracked against whitepaper.md.
 - **Modified files:**
   - .github/workflows/fuzz-regression.yml
 
+## Commit c47fda9cf9d76a3d3f98142efae88106b5a3a469
+
+- **Timestamp:** 2026-09-09T22:59:53Z
+- **Event:** push
+- **Modified files:**
+  - crates/onx-execution/src/interpreter.rs
+  - crates/onx-execution/tests/execution_tests.rs
+  - docs/decisions/ADR-0017-tvm-instruction-set.md
+  - docs/specification/tvm-instruction-set.md
+
