@@ -32,6 +32,16 @@ pub enum TransactionsError {
     FifoOrderViolation { previous_lt: u64, next_lt: u64 },
     /// Enqueuing into an output-queue lane would regress or repeat that lane's logical time (§3.3 rule 2).
     LogicalTimeRegression { previous_lt: u64, next_lt: u64 },
+    /// A routing request crossed workchains or used shards at different depths.
+    IncompatibleRoute,
+    /// A routing request's message endpoint does not belong to the supplied shard.
+    RouteEndpointMismatch,
+    /// A proposed transit hop is not a one-bit hypercube neighbor.
+    InvalidHypercubeHop,
+    /// A message cannot pay the deterministic forwarding fees for its route.
+    InsufficientTransitFee { available: u128, required: u128 },
+    /// Cross-workchain message expiry calculation overflowed logical time.
+    ExpiryOverflow,
 }
 
 impl fmt::Display for TransactionsError {
@@ -86,6 +96,27 @@ impl fmt::Display for TransactionsError {
                 "logical time regression in output-queue lane: lt {} <= previous lt {}",
                 next_lt, previous_lt
             ),
+            Self::IncompatibleRoute => write!(
+                f,
+                "hypercube route requires equal-depth shards in one workchain"
+            ),
+            Self::RouteEndpointMismatch => {
+                write!(f, "message endpoint does not belong to its routing shard")
+            }
+            Self::InvalidHypercubeHop => {
+                write!(f, "route contains a non-neighboring hypercube hop")
+            }
+            Self::InsufficientTransitFee {
+                available,
+                required,
+            } => write!(
+                f,
+                "message value {} is insufficient for transit fee {}",
+                available, required
+            ),
+            Self::ExpiryOverflow => {
+                write!(f, "cross-workchain message expiry overflows logical time")
+            }
         }
     }
 }

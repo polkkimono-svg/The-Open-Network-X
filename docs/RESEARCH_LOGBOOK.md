@@ -63,3 +63,11 @@ During the migration epoch, outbound messages bound for migrating accounts are h
 [QUESTION]
 How does the onx-consensus crate handle validator equivocation penalties and Byzantine fault proofs during a 2/3 quorum failure when a subset of validators attempt to finalize competing block candidates on the masterchain?
 
+
+### Entry #6
+
+#### [ANSWER]
+When a quorum failure includes competing masterchain candidates, ONX validators retain the domain-separated signed vote payloads as Byzantine-fault evidence rather than inferring intent from missing votes. A proof consists of two valid signatures by the same validator for conflicting candidate hashes in the same `(shard, round, phase)` context. It can be checked deterministically by the consensus and election layers, then used by the epoch-level slashing rules; a mere failure to reach two-thirds advances the round/view and is not itself slashable equivocation.
+
+#### [QUESTION]
+How should route commitments encode dynamic shard split or merge boundaries so a slow-path hypercube message cannot be redirected to a sibling shard after its source queue has been committed?
