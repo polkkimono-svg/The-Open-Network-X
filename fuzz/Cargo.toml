@@ -1,0 +1,38 @@
+[package]
+name = "onx-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+onx-blocks = { path = "../crates/onx-blocks" }
+onx-consensus = { path = "../crates/onx-consensus" }
+onx-data-structures = { path = "../crates/onx-data-structures" }
+onx-execution = { path = "../crates/onx-execution" }
+onx-primitives = { path = "../crates/onx-primitives" }
+onx-state-model = { path = "../crates/onx-state-model" }
+
+[[bin]]
+name = "boc_parser"
+path = "fuzz_targets/boc_parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tvm_execution"
+path = "fuzz_targets/tvm_execution.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "block_header"
+path = "fuzz_targets/block_header.rs"
+test = false
+doc = false
+bench = false

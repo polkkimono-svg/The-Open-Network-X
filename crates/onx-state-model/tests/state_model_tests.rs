@@ -231,6 +231,21 @@ fn test_bag_of_cells_serialization_and_cycle_detection() {
 }
 
 #[test]
+fn test_boc_rejects_impossible_cell_count_before_allocation() {
+    // Root hash followed by a hostile cell count, with no cell-entry bytes.
+    // The decoder must reject this before using the count as a HashMap
+    // capacity, rather than attempting an attacker-controlled allocation.
+    let mut bytes = vec![0u8; 32];
+    bytes.extend_from_slice(&u32::MAX.to_be_bytes());
+
+    assert!(matches!(
+        BagOfCells::from_bytes(&bytes),
+        Err(StateModelError::DeserializationError(message))
+            if message == "BoC cell count exceeds remaining input capacity"
+    ));
+}
+
+#[test]
 fn test_shard_state_tree_and_merkle_proofs() {
     let mut tree = ShardStateTree::new();
     let acc1 = AccountId::from_bytes([0x10; 32]);
