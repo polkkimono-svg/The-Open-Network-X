@@ -25,5 +25,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install actionlint
+        uses: taiki-e/install-action@actionlint
+
       - name: Run actionlint
-        uses: rhysd/actionlint-action@v1
+        run: actionlint

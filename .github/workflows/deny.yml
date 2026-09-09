@@ -22,8 +22,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@1.83.0
+
       - name: Install cargo-deny
         uses: taiki-e/install-action@cargo-deny
 
       - name: Run cargo deny
-        run: cargo deny check
+        run: cargo deny check --locked
