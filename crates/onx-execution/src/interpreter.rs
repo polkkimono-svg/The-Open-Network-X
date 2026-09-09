@@ -1,3 +1,4 @@
+use crate::continuation::{Continuation, ControlRegisters};
 use crate::types::{Builder, ExceptionKind, ExecutionContext, ExecutionResult, Slice, StackValue};
 use onx_data_structures::Message;
 use onx_primitives::{
@@ -19,6 +20,8 @@ pub struct Interpreter {
     pub gas_used: u64,
     pub context: ExecutionContext,
     pub code_refs: Vec<Cell>,
+    /// TVM continuation control registers c0 (return), c1 (alternative), c2 (exception).
+    pub control_registers: ControlRegisters,
 }
 
 impl Interpreter {
@@ -34,6 +37,32 @@ impl Interpreter {
             gas_used: 0,
             context,
             code_refs: Vec::new(),
+            control_registers: ControlRegisters::default(),
+        }
+    }
+
+    pub fn set_exception_handler(&mut self, continuation: Continuation) {
+        self.control_registers.set_c2(continuation);
+    }
+
+    /// Installs c1, the continuation selected for an alternative return.
+    pub fn set_alternative_return(&mut self, continuation: Continuation) {
+        self.control_registers.set_c1(continuation);
+    }
+
+    fn jump_to(&mut self, continuation: Continuation) {
+        self.current_code = continuation.code;
+        self.pc_bits = continuation.pc_bits;
+    }
+
+    /// Transfers execution to c0 or c1.  This is used by embedding hosts that
+    /// expose TVM's normal and alternative return paths.
+    pub fn return_to_control_register(&mut self, alternative: bool) -> bool {
+        if let Some(continuation) = self.control_registers.take_return(alternative) {
+            self.jump_to(continuation);
+            true
+        } else {
+            false
         }
     }
 
@@ -612,6 +641,8 @@ impl Interpreter {
                         // CALL variants
                         self.call_stack
                             .push((self.current_code.clone(), self.pc_bits));
+                        self.control_registers
+                            .set_c0(Continuation::new(self.current_code.clone(), self.pc_bits));
                     }
                     self.current_code = target_code;
                     self.pc_bits = 0;
@@ -620,9 +651,12 @@ impl Interpreter {
             0x72 => {
                 // RET
                 self.consume_gas(4)?;
-                if let Some((prev_code, prev_pc)) = self.call_stack.pop() {
-                    self.current_code = prev_code;
-                    self.pc_bits = prev_pc;
+                if self.return_to_control_register(false) {
+                    self.call_stack.pop();
+                    self.control_registers.c0 = self
+                        .call_stack
+                        .last()
+                        .map(|(code, pc)| Continuation::new(code.clone(), *pc));
                 } else {
                     return Ok(false); // Execution finished successfully
                 }
@@ -658,9 +692,12 @@ impl Interpreter {
             0x79 => {
                 self.consume_gas(4)?;
                 if StackValue::Integer(self.pop_integer()?).to_i128()? != 0 {
-                    if let Some((code, pc)) = self.call_stack.pop() {
-                        self.current_code = code;
-                        self.pc_bits = pc;
+                    if self.return_to_control_register(false) {
+                        self.call_stack.pop();
+                        self.control_registers.c0 = self
+                            .call_stack
+                            .last()
+                            .map(|(code, pc)| Continuation::new(code.clone(), *pc));
                     } else {
                         return Ok(false);
                     }
@@ -710,6 +747,21 @@ impl Interpreter {
                     };
                 }
                 Err(kind) => {
+                    if let Some(handler) = self.control_registers.c2() {
+                        // c2 receives the deterministic exception discriminator and
+                        // execution continues at the handler instead of rolling back.
+                        let code = match kind {
+                            ExceptionKind::OutOfGas => 0,
+                            ExceptionKind::IntegerOverflow => 1,
+                            ExceptionKind::AbsentNode => 2,
+                            ExceptionKind::MalformedCell => 3,
+                            ExceptionKind::TypeMismatch => 4,
+                        };
+                        if self.push(StackValue::from_i128(code)).is_ok() {
+                            self.jump_to(handler);
+                            continue;
+                        }
+                    }
                     return ExecutionResult::Exception {
                         kind,
                         gas_used: self.gas_used,

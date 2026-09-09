@@ -3,9 +3,13 @@
 //! Implements `docs/specification/execution.md` (ADR-0007) and
 //! `docs/specification/tvm-instruction-set.md` (ADR-0017).
 
+pub mod continuation;
+pub mod dictionary;
 pub mod interpreter;
 pub mod types;
 
+pub use continuation::{Continuation, ControlRegisters};
+pub use dictionary::{Dictionary, DictionaryError};
 pub use interpreter::Interpreter;
 pub use types::{Builder, ExceptionKind, ExecutionContext, ExecutionResult, Slice, StackValue};
 
