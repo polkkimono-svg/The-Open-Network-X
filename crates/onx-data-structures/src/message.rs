@@ -2,6 +2,7 @@
 
 use crate::address::FullAddress;
 use crate::error::DataStructureError;
+use crate::shard::ShardIdent;
 use onx_primitives::{domain_hash, DomainTag, Uint128, Uint256, Uint32, Uint64};
 
 /// Message type discriminant byte tag.
@@ -142,5 +143,35 @@ impl Message {
             created_lt,
             body_cell_hash,
         })
+    }
+
+    /// Validates that the message source address matches the given shard.
+    pub fn validate_source_shard(&self, shard: &ShardIdent) -> Result<(), DataStructureError> {
+        self.src_address.validate_against_shard(shard)
+    }
+
+    /// Validates that the message destination address matches the given shard.
+    pub fn validate_dest_shard(&self, shard: &ShardIdent) -> Result<(), DataStructureError> {
+        self.dest_address.validate_against_shard(shard)
+    }
+
+    /// Validates message address alignment with `shard` according to `msg_type`:
+    /// - `MessageType::Internal`: requires at least one endpoint (`src_address` or `dest_address`) to match `shard`.
+    /// - `MessageType::ExternalInbound`: requires `dest_address` to match `shard`.
+    /// - `MessageType::ExternalOutbound`: requires `src_address` to match `shard`.
+    pub fn validate_against_shard(&self, shard: &ShardIdent) -> Result<(), DataStructureError> {
+        match self.msg_type {
+            MessageType::Internal => {
+                let src_ok = self.validate_source_shard(shard).is_ok();
+                let dest_ok = self.validate_dest_shard(shard).is_ok();
+                if src_ok || dest_ok {
+                    Ok(())
+                } else {
+                    Err(DataStructureError::AddressShardMismatch)
+                }
+            }
+            MessageType::ExternalInbound => self.validate_dest_shard(shard),
+            MessageType::ExternalOutbound => self.validate_source_shard(shard),
+        }
     }
 }
