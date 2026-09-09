@@ -59,6 +59,18 @@ open an issue so this document can be corrected.
   state, no randomness, no network calls in anything that touches
   consensus-critical logic (`INSTRUCTIONS.md` §10).
 
+## Research Question Logbook
+
+Every contributor is required to participate in the ONX Research Question Logbook (`docs/RESEARCH_LOGBOOK.md`).
+
+When submitting changes to the codebase, contributors must:
+1. Read the latest question in `docs/RESEARCH_LOGBOOK.md`.
+2. Add a new entry (`Entry #N`) to `docs/RESEARCH_LOGBOOK.md`.
+3. Provide an answer to the previous question under a section containing the `[ANSWER]` label.
+4. Ask a new research/development question about ONX under a section containing the `[QUESTION]` label.
+
+CI enforces these rules and will fail if the required keywords/labels (`[ANSWER]` and `[QUESTION]`) are missing from new entries or if formatting rules are violated.
+
 ## Decision records
 
 Add an ADR (`docs/decisions/ADR-NNNN-title.md`, next number after the
