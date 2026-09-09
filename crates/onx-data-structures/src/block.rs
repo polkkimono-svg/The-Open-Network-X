@@ -9,23 +9,27 @@ use onx_primitives::{
 /// Block Header fixed magic constructor (`0x1F2E3D4C`).
 pub const BLOCK_HEADER_MAGIC: u32 = 0x1F2E3D4C;
 
-/// Fixed binary block header layout (`BlockHeader`, 210 bytes total).
+/// Flag bit indicating a merge-result block (ADR-0016, data-structures.md §4.4).
+pub const MERGE_RESULT_FLAG: u16 = 0x0010;
+
+/// Fixed binary block header layout (`BlockHeader`, 242 bytes total, amended by ADR-0016).
 ///
 /// Layout:
 /// 1. `magic_constructor` : uint32  (4 bytes: 0x1F2E3D4C)
 /// 2. `workchain_id`      : int32   (4 bytes)
 /// 3. `shard_prefix`      : uint64  (8 bytes)
 /// 4. `seq_no`            : uint32  (4 bytes, sequence number)
-/// 5. `flags`             : uint16  (2 bytes)
+/// 5. `flags`             : uint16  (2 bytes; bit 4 = MERGE_RESULT)
 /// 6. `gen_utime`         : uint32  (4 bytes, unix timestamp)
 /// 7. `start_lt`          : uint64  (8 bytes)
 /// 8. `end_lt`            : uint64  (8 bytes)
 /// 9. `prev_key_block`    : uint32  (4 bytes)
 /// 10. `prev_ref_hash`    : uint256 (32 bytes, parent block hash)
-/// 11. `master_ref_hash`  : uint256 (32 bytes, latest masterchain block hash, zero if masterchain)
-/// 12. `state_root_hash`  : uint256 (32 bytes, state Bag-of-Cells root hash)
-/// 13. `in_msg_root_hash` : uint256 (32 bytes, input message Merkle tree root)
-/// 14. `out_msg_root_hash`: uint256 (32 bytes, output message Merkle tree root)
+/// 11. `prev_ref_hash_2`  : uint256 (32 bytes, second parent block hash; zero unless MERGE_RESULT)
+/// 12. `master_ref_hash`  : uint256 (32 bytes, latest masterchain block hash, zero if masterchain)
+/// 13. `state_root_hash`  : uint256 (32 bytes, state Bag-of-Cells root hash)
+/// 14. `in_msg_root_hash` : uint256 (32 bytes, input message Merkle tree root)
+/// 15. `out_msg_root_hash`: uint256 (32 bytes, output message Merkle tree root)
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BlockHeader {
     pub magic_constructor: Uint32,
@@ -37,6 +41,7 @@ pub struct BlockHeader {
     pub end_lt: Uint64,
     pub prev_key_block: Uint32,
     pub prev_ref_hash: Uint256,
+    pub prev_ref_hash_2: Uint256,
     pub master_ref_hash: Uint256,
     pub state_root_hash: Uint256,
     pub in_msg_root_hash: Uint256,
@@ -44,13 +49,13 @@ pub struct BlockHeader {
 }
 
 impl BlockHeader {
-    /// Exact byte length of serialized BlockHeader (210 bytes).
-    pub const BYTE_LENGTH: usize = 4 + 12 + 4 + 2 + 4 + 8 + 8 + 4 + 32 + 32 + 32 + 32 + 32;
+    /// Exact byte length of serialized BlockHeader (242 bytes).
+    pub const BYTE_LENGTH: usize = 4 + 12 + 4 + 2 + 4 + 8 + 8 + 4 + 32 + 32 + 32 + 32 + 32 + 32;
 
     /// Domain tag for block header hashing.
     pub const DOMAIN_TAG: DomainTag = BLOCK_HEADER_V1;
 
-    /// Serializes BlockHeader to 210 canonical binary bytes.
+    /// Serializes BlockHeader to 242 canonical binary bytes.
     pub fn to_bytes(&self) -> [u8; Self::BYTE_LENGTH] {
         let mut buf = [0u8; Self::BYTE_LENGTH];
         let mut offset = 0;
@@ -82,6 +87,9 @@ impl BlockHeader {
         buf[offset..offset + 32].copy_from_slice(&self.prev_ref_hash.encode());
         offset += 32;
 
+        buf[offset..offset + 32].copy_from_slice(&self.prev_ref_hash_2.encode());
+        offset += 32;
+
         buf[offset..offset + 32].copy_from_slice(&self.master_ref_hash.encode());
         offset += 32;
 
@@ -96,7 +104,7 @@ impl BlockHeader {
         buf
     }
 
-    /// Deserializes BlockHeader from 210 canonical binary bytes and validates header magic constructor and shard ident.
+    /// Deserializes BlockHeader from 242 canonical binary bytes and validates header magic constructor, shard ident, and merge parent reference consistency.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, DataStructureError> {
         if bytes.len() < Self::BYTE_LENGTH {
             return Err(DataStructureError::TruncatedInput {
@@ -145,6 +153,19 @@ impl BlockHeader {
         let prev_ref_hash = Uint256::decode_exact(&bytes[offset..offset + 32])?;
         offset += 32;
 
+        let prev_ref_hash_2 = Uint256::decode_exact(&bytes[offset..offset + 32])?;
+        offset += 32;
+
+        let is_merge_result = (flags.0 & MERGE_RESULT_FLAG) != 0;
+        let is_prev_2_zero = prev_ref_hash_2.0 == [0u8; 32];
+
+        if !is_merge_result && !is_prev_2_zero {
+            return Err(DataStructureError::MergeParentReferenceInconsistency);
+        }
+        if is_merge_result && is_prev_2_zero {
+            return Err(DataStructureError::MergeParentReferenceInconsistency);
+        }
+
         let master_ref_hash = Uint256::decode_exact(&bytes[offset..offset + 32])?;
         offset += 32;
 
@@ -166,6 +187,7 @@ impl BlockHeader {
             end_lt,
             prev_key_block,
             prev_ref_hash,
+            prev_ref_hash_2,
             master_ref_hash,
             state_root_hash,
             in_msg_root_hash,

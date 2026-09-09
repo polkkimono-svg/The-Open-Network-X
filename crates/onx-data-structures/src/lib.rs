@@ -11,7 +11,7 @@ pub mod message;
 pub mod shard;
 
 pub use address::{AccountId, FullAddress, WorkchainIdent};
-pub use block::{BlockHeader, BLOCK_HEADER_MAGIC};
+pub use block::{BlockHeader, BLOCK_HEADER_MAGIC, MERGE_RESULT_FLAG};
 pub use error::DataStructureError;
 pub use message::{Message, MessageType};
 pub use shard::ShardIdent;
