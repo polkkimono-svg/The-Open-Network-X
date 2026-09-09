@@ -1,13 +1,17 @@
 //! Tests for transaction/message admission, output-queue ordering, and
 //! double-delivery prevention per docs/specification/transactions.md §6.
 
-use onx_data_structures::{AccountId, FullAddress, Message, MessageType, WorkchainIdent};
+use onx_data_structures::{
+    AccountId, FullAddress, Message, MessageType, ShardIdent, WorkchainIdent,
+};
 use onx_primitives::{Uint128, Uint256, Uint32, Uint64};
 use onx_state_model::AccountType;
 use onx_transactions::{
-    admit_external_inbound, admit_external_outbound, admit_internal,
-    validate_extra_currencies_sorted, OutputQueue, ProcessedMessageTracker,
-    TentativeExecutionOutcome, TransactionsError, MAX_TENTATIVE_GAS,
+    admit_external_inbound, admit_external_outbound, admit_internal, are_neighbors,
+    cross_workchain_expiry, is_cross_workchain_expired, plan_hypercube_route,
+    validate_extra_currencies_sorted, validate_hypercube_route, OutputQueue,
+    ProcessedMessageTracker, TentativeExecutionOutcome, TransactionsError,
+    MAX_CROSS_WORKCHAIN_LT_WINDOW, MAX_TENTATIVE_GAS,
 };
 
 fn addr(byte: u8) -> FullAddress {
@@ -243,4 +247,70 @@ fn test_double_delivery_prevention() {
     tracker.prune(&hash);
     assert!(!tracker.contains(&hash));
     assert_eq!(tracker.admit_message(&msg), Ok(()));
+}
+
+fn shard(prefix: u64, length: u8) -> ShardIdent {
+    ShardIdent::from_prefix_bits(WorkchainIdent::BASIC, prefix, length).unwrap()
+}
+
+fn routed_message(created_lt: u64, source_prefix: u8, destination_prefix: u8) -> Message {
+    let mut message = base_message(MessageType::Internal, created_lt);
+    message.src_address = addr(source_prefix << 5);
+    message.dest_address = addr(destination_prefix << 5);
+    message.amount_nanos = Uint128::from(100u128);
+    message
+}
+
+#[test]
+fn test_hypercube_route_changes_one_prefix_bit_per_hop() {
+    // 000 -> 111 requires exactly three neighboring hops.
+    let source = shard(0, 3);
+    let destination = shard(0xe000_0000_0000_0000, 3);
+    let message = routed_message(10, 0b000, 0b111);
+
+    let plan = plan_hypercube_route(&message, source, destination, 7).unwrap();
+    assert_eq!(plan.hops.len(), 3);
+    assert_eq!(plan.transit_fee, 21);
+    assert_eq!(plan.remaining_value, 79);
+    assert_eq!(plan.hops[0].to, shard(0x8000_0000_0000_0000, 3));
+    assert_eq!(plan.hops[1].to, shard(0xc000_0000_0000_0000, 3));
+    assert_eq!(plan.hops[2].to, destination);
+    assert!(plan.hops.iter().all(|hop| are_neighbors(hop.from, hop.to)));
+    assert_eq!(
+        validate_hypercube_route(&plan.hops, source, destination),
+        Ok(())
+    );
+}
+
+#[test]
+fn test_hypercube_route_rejects_insufficient_value_and_invalid_hops() {
+    let source = shard(0, 2);
+    let destination = shard(0xc000_0000_0000_0000, 2);
+    let mut message = routed_message(10, 0b00, 0b11 << 1);
+    message.amount_nanos = Uint128::from(13u128);
+    assert_eq!(
+        plan_hypercube_route(&message, source, destination, 7),
+        Err(TransactionsError::InsufficientTransitFee {
+            available: 13,
+            required: 14
+        })
+    );
+
+    let invalid = onx_transactions::RouteHop {
+        from: source,
+        to: destination,
+    };
+    assert_eq!(
+        validate_hypercube_route(&[invalid], source, destination),
+        Err(TransactionsError::InvalidHypercubeHop)
+    );
+}
+
+#[test]
+fn test_cross_workchain_expiry_uses_logical_time_only() {
+    let message = routed_message(44, 0, 0);
+    let expiry = cross_workchain_expiry(&message).unwrap();
+    assert_eq!(expiry, 44 + MAX_CROSS_WORKCHAIN_LT_WINDOW);
+    assert!(!is_cross_workchain_expired(&message, expiry).unwrap());
+    assert!(is_cross_workchain_expired(&message, expiry + 1).unwrap());
 }
