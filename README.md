@@ -87,8 +87,10 @@ Specification work completed so far, with accompanying architecture decision rec
 | Data structures | `docs/specification/data-structures.md` | `ADR-0002` |
 | State model | `docs/specification/state-model.md` | `ADR-0003` |
 | Implementation language | — | `ADR-0004` |
+| Transactions and messages | `docs/specification/transactions.md` | `ADR-0005` |
+| Blocks and masterchain coupling | `docs/specification/blocks.md` | `ADR-0006` |
 
-The `crates/onx-primitives` and `crates/onx-data-structures` crates cover the protocol-primitives and data-structures specifications above.
+The `crates/onx-primitives`, `crates/onx-data-structures`, and `crates/onx-state-model` crates cover the protocol-primitives, data-structures, and state-model specifications above.
 
 The diagram below shows the full specification/implementation sequence from `docs/specification/architecture.md`, and where each layer currently stands:
 
@@ -104,9 +106,9 @@ flowchart TD
     A["Architecture baseline<br/>ADR-0001"]:::done
     B["Protocol primitives<br/>ADR-0002 + onx-primitives crate"]:::done
     C["Data structures<br/>ADR-0002 + onx-data-structures crate"]:::done
-    D["State model<br/>ADR-0003, spec only"]:::specOnly
-    E["Transactions & messages"]:::todo
-    F["Blocks & masterchain coupling"]:::todo
+    D["State model<br/>ADR-0003 + onx-state-model crate"]:::done
+    E["Transactions & messages<br/>ADR-0005, spec only"]:::specOnly
+    F["Blocks & masterchain coupling<br/>ADR-0006, spec only"]:::specOnly
     G["Execution / VM"]:::todo
     H["Consensus & validator operation"]:::todo
     I["Networking"]:::todo
