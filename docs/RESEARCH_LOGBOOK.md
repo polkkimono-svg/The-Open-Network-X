@@ -78,3 +78,11 @@ One sharp edge this doesn't resolve: a bounce transaction's gas-refund proof (En
 
 #### [QUESTION]
 Should a migration certificate's grace window be a fixed lt-delta set once in `docs/specification/economics.md` (mirroring ADR-0018's static exchange-matrix cadence), or computed per-split from the freeze-window drain rate observed just before the boundary — and if the latter, how does a light client, which doesn't run shard validation itself, learn which formula and inputs applied to a certificate it's holding?
+
+### Entry #7
+
+#### [ANSWER]
+The migration certificate grace window should be a fixed logical-time delta committed in masterchain configuration. A fixed value lets a light client validate an old proof using only the certificate, its masterchain configuration proof, and logical time; a per-split observation-based value would also require authenticated load inputs and an executable formula, increasing the verification surface without improving deterministic state migration. The split/merge pipeline therefore only moves account records unchanged and assigns pending inbound messages by their destination prefix, then canonicalizes each resulting queue by `(created_lt, message_hash)`.
+
+#### [QUESTION]
+How should the masterchain encode and authenticate a migration certificate mapping old subtree hashes to new shard roots while keeping the proof compact for light clients?
