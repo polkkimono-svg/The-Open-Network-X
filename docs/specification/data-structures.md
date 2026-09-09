@@ -7,10 +7,10 @@
 
 ## 1. Reference
 
-- `ton.md`, §2.1.6, §2.1.8, §2.1.9: Identification of workchains, shardchains, and account-chains.
-- `ton.md`, §2.2.5: TL-B and algebraic type specifications.
-- `ton.md`, §2.3.1: Account IDs as 256-bit values.
-- `ton.md`, §2.5.15, §2.6.15: Block headers, masterchain coupling, and state commitments.
+- `whitepaper.md`, §2.1.6, §2.1.8, §2.1.9: Identification of workchains, shardchains, and account-chains.
+- `whitepaper.md`, §2.2.5: TL-B and algebraic type specifications.
+- `whitepaper.md`, §2.3.1: Account IDs as 256-bit values.
+- `whitepaper.md`, §2.5.15, §2.6.15: Block headers, masterchain coupling, and state commitments.
 - `INSTRUCTIONS.md`, §12, §14, §15, §21, §23: Serialization, dynamic sharding invariants, masterchain/workchain/shardchain boundaries, and protocol testability.
 - `docs/specification/architecture.md`: Architectural baseline requirements and open questions ONX-ARCH-002 and ONX-ARCH-003.
 
