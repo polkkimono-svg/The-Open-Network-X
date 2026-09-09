@@ -3,7 +3,7 @@ name = "onx-state-model"
 version = "0.1.0"
 edition = "2021"
 description = "ONX state model, account states/lifecycle, Cell hashing, Bag-of-Cells (BoC), and Merkle proofs per docs/specification/state-model.md"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
