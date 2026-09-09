@@ -5,6 +5,11 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -49,7 +54,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Install pinned cargo-audit
-        run: cargo install cargo-audit --version 0.21.2 --locked
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@cargo-audit
+
       - name: Security audit
         run: cargo audit
