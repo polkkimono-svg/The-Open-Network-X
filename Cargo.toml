@@ -6,4 +6,10 @@ members = [
     "crates/onx-state-model",
     "crates/onx-transactions",
     "crates/onx-blocks",
+    "crates/onx-execution",
+    "crates/onx-payment-channels",
+    "crates/onx-consensus",
+    "crates/onx-networking",
+    "crates/onx-sharding",
+    "crates/onx-economics",
 ]

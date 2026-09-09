@@ -1,0 +1,14 @@
+[package]
+name = "onx-networking"
+version = "0.1.0"
+edition = "2021"
+description = "ONX networking specs: ADNL peer identity & RLDP datagram transport, DHT Kademlia discovery, and overlay network propagation"
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+onx-primitives = { path = "../onx-primitives" }
+onx-data-structures = { path = "../onx-data-structures" }
+
+[dev-dependencies]
+hex = "0.4"

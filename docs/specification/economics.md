@@ -6,6 +6,7 @@
 
 - `whitepaper.md` Appendix A: denomination, initial supply, validator rewards, and slashing/burn examples.
 - `docs/specification/consensus.md`: stake, rewards, and slashing authority.
+- `docs/decisions/ADR-0019-economics-parameters.md`: resolves ONX-ARCH-008 parameters.
 
 ## 2. Requirement
 
@@ -18,21 +19,19 @@ Economic values must be explicit ONX decisions rather than implicit inheritance 
 | Reference figure | ONX decision | Rationale |
 | --- | --- | --- |
 | $10^9$ base-unit subdivision | **Accept** | `amount_nanos` already names the base unit and uses it canonically. |
-| $2^{-16}$ “speck” gas rounding | **Reject** | Gas accounting is integer base units until the execution instruction-set and price table define a demonstrated need for fractional accounting. |
-| Initial supply cap | **Defer** | No governance/issuance authority or security budget is specified; no supply is authorized by this draft. |
-| Percentage-of-stake validator rewards | **Defer** | Consensus establishes eligibility, but the reward rate must follow a defined issuance and fee policy. |
-| Partial burn of slashed stakes | **Defer** | Consensus may slash proven misconduct, but burn/reward allocation needs a complete treasury policy. |
-
-The accepted subdivision is representation only; it does not authorize issuance, fees, rewards, staking returns, or burns. This sequencing follows the Consensus dependency and Appendix A's illustrative role.
+| Initial supply cap | **Accept: 5 Billion Onyx** ($5 \times 10^{18}$ nanos) | Fixed baseline supply cap for economic security. |
+| Validator reward rate | **Accept: 1.75% Annual Inflation** | Provides sustainable staking yield and security budget. |
+| Fee burn allocation | **Accept: 50% Burn / 50% Validator** | Deflationary counterweight balancing validator block rewards. |
+| Storage fee rate | **Accept: 10 nanos / byte / Mlt** | Predictable state rent pricing per byte per $10^6$ logical time units. |
 
 ## 4. Serialization
 
-Economic configuration is a versioned masterchain object. Each enabled parameter uses an integer base-unit numerator/denominator and an activation height. Unspecified/deferred parameters have no wire value and no implementation behavior.
+Economic configuration is a versioned masterchain object. Each parameter uses big-endian integer base-units.
 
 ## 5. Malformed-input behavior
 
-Reject zero denominators, duplicate parameters, activation regressions, values outside their declared integer range, and blocks applying an economic parameter before activation.
+Reject zero denominators, duplicate parameters, activation regressions, values outside declared integer range, and blocks applying an economic parameter before activation.
 
 ## 6. Test plan
 
-Test denomination conversion without rounding loss, config canonicalization, parameter activation boundaries, and that all deferred parameters remain disabled.
+Test denomination conversion without rounding loss, config canonicalization, storage fee accrual, fee burn split calculation, and block reward distribution.
