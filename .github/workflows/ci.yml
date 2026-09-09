@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches:
+      - main
       - work
 
 permissions:
@@ -25,6 +26,9 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
       - name: Check formatting
         run: cargo fmt --all -- --check
 
@@ -36,3 +40,15 @@ jobs:
 
       - name: Run tests
         run: cargo test --workspace --all-targets
+
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Security audit
+        uses: rustsec/audit-check@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
