@@ -216,15 +216,28 @@ impl AccountState {
             }
             (Self::Uninitialized, Self::Uninitialized) => Ok(()),
             (Self::Uninitialized, _) => Err(StateModelError::InvalidStateTransition(
-                "Uninitialized account can only transition to Active or remain Uninitialized".to_string(),
+                "Uninitialized account can only transition to Active or remain Uninitialized"
+                    .to_string(),
             )),
             (
-                Self::Active { last_trans_lt: cur_lt, .. },
-                Self::Active { last_trans_lt: next_lt, .. },
+                Self::Active {
+                    last_trans_lt: cur_lt,
+                    ..
+                },
+                Self::Active {
+                    last_trans_lt: next_lt,
+                    ..
+                },
             )
             | (
-                Self::Active { last_trans_lt: cur_lt, .. },
-                Self::Frozen { last_trans_lt: next_lt, .. },
+                Self::Active {
+                    last_trans_lt: cur_lt,
+                    ..
+                },
+                Self::Frozen {
+                    last_trans_lt: next_lt,
+                    ..
+                },
             ) => {
                 if new_lt <= *cur_lt || *next_lt != new_lt {
                     return Err(StateModelError::LogicalTimeRegression {
@@ -236,8 +249,14 @@ impl AccountState {
             }
             (Self::Active { .. }, Self::Destroyed) => Ok(()),
             (
-                Self::Frozen { last_trans_lt: cur_lt, .. },
-                Self::Active { last_trans_lt: next_lt, .. },
+                Self::Frozen {
+                    last_trans_lt: cur_lt,
+                    ..
+                },
+                Self::Active {
+                    last_trans_lt: next_lt,
+                    ..
+                },
             ) => {
                 if new_lt <= *cur_lt || *next_lt != new_lt {
                     return Err(StateModelError::LogicalTimeRegression {
@@ -248,8 +267,14 @@ impl AccountState {
                 Ok(())
             }
             (
-                Self::Frozen { last_trans_lt: cur_lt, .. },
-                Self::Frozen { last_trans_lt: next_lt, .. },
+                Self::Frozen {
+                    last_trans_lt: cur_lt,
+                    ..
+                },
+                Self::Frozen {
+                    last_trans_lt: next_lt,
+                    ..
+                },
             ) => {
                 if new_lt <= *cur_lt || *next_lt != new_lt {
                     return Err(StateModelError::LogicalTimeRegression {

@@ -52,6 +52,10 @@ don't duplicate the work.
   and split its description into ADNL/DHT/overlay sub-components (`whitepaper.md`
   §3.1–§3.3), and added an explicit "Out of scope for now" note for `whitepaper.md`
   §4 (TON Services and Applications).
+- Added `crates/onx-state-model` implementing `docs/specification/state-model.md`.
+- **ADR-0005** — Transactions, Messaging, Hypercube Routing, and Multi-Currency Model.
+  Added `docs/specification/transactions.md` (resolves **ONX-ARCH-004**, introduces
+  **ONX-ARCH-011** and **ONX-ARCH-012**).
 
 ## Up for grabs
 
@@ -68,38 +72,26 @@ the answer.
       A crate for the account state record layout, cell binary serialization,
       domain-separated cell hashing, and Merkle proof structures. Depends on
       `onx-primitives` and `onx-data-structures`.
-- [ ] **Write the Transactions and Messages specification**
-      (`docs/specification/transactions.md` + ADR). This is the next
-      unwritten item in the architecture's specification sequence
-      (item 4) and resolves **ONX-ARCH-004** (cross-shard message order,
-      replay, and failure semantics). Nothing past this point can be
-      specified precisely without it. **(whitepaper.md §2.4)** covers this in far
-      more detail than the architecture baseline's one-line summary; at
-      minimum the spec needs a documented ONX interpretation of:
-      - the message value model as a list of `(currency_id, value)` pairs
-        (§2.4.5) — this is the concrete white-paper basis for the
-        `extra_currencies` field that `docs/specification/data-structures.md`
-        already lists but `crates/onx-data-structures`' `Message` type does
-        not yet implement (flagged in the PR #8 review);
-      - external messages ("messages from nowhere", §2.4.6) and their
-        distinct admission rule (tentative execution under a small gas
-        limit before inclusion, since they carry no value to pay for their
-        own processing) versus ordinary internal messages;
-      - the output-queue-only model (§2.4.16–§2.4.17): there is no input
-        queue, and a per-account output queue has a partial delivery order
-        (older-block messages before newer, and same-source→same-destination
-        messages in generation order) that any admission rule must preserve;
-      - the two-path delivery mechanism — slow hypercube routing (§2.4.19)
-        and the optional instant/fast path (§2.4.20) — and what ONX decides
-        to adopt, simplify, or defer here, since this is one of the more
-        elaborate mechanisms in the reference;
-      - double-delivery prevention via a per-account-chain record of recently
-        delivered message hashes (§2.4.23).
+- [x] **Write the Transactions and Messages specification**
+      (`docs/specification/transactions.md` + ADR-0005). Resolves **ONX-ARCH-004**
+      (cross-shard message order, replay, and failure semantics).
+      - Message value model as `(currency_id, value)` pairs (§2.4.5) integrated
+        with `extra_currencies`, closing the gap flagged in the PR #8 review
+        where `data-structures.md` listed this field but `crates/onx-data-structures`'
+        `Message` type didn't implement it — **the crate itself still needs updating
+        to match; see "Next" below.**
+      - External messages ("messages from nowhere", §2.4.6) and tentative execution
+        admission rules.
+      - Output-queue-only model (§2.4.16–§2.4.17) and per-account FIFO delivery order.
+      - Hypercube routing ("slow path", §2.4.19) adoption and fast path deferral (**ONX-ARCH-011**).
+      - Double-delivery prevention via tracking processed message hashes (§2.4.23).
 
 ### Next
 
-- [ ] Implement the transactions/messages layer in code once its
-      specification exists.
+- [ ] Implement the transactions/messages layer in code now that
+      `docs/specification/transactions.md` (ADR-0005) exists. Includes updating
+      `crates/onx-data-structures`' `Message` type to add the `extra_currencies`
+      field the spec now formalizes (§4.1) — its wire layout currently omits it.
 - [ ] Write the **Blocks and masterchain coupling** specification
       (block validity, parent references, masterchain references,
       canonicality) — architecture sequence item 5. **(whitepaper.md §2.6, §2.7.3)**

@@ -24,7 +24,10 @@ pub enum StateModelError {
     /// Cycle detected in Bag-of-Cells graph.
     CyclicCellReference,
     /// State root hash mismatch during block state verification.
-    StateRootMismatch { expected: [u8; 32], actual: [u8; 32] },
+    StateRootMismatch {
+        expected: [u8; 32],
+        actual: [u8; 32],
+    },
     /// Merkle proof verification failure.
     InvalidMerkleProof(String),
 }
@@ -34,16 +37,30 @@ impl fmt::Display for StateModelError {
         match self {
             Self::InvalidDescriptor => write!(f, "Invalid cell descriptor bytes"),
             Self::DataTooLarge { length, max } => {
-                write!(f, "Cell data length {} exceeds maximum allowed {}", length, max)
+                write!(
+                    f,
+                    "Cell data length {} exceeds maximum allowed {}",
+                    length, max
+                )
             }
             Self::TooManyReferences { count, max } => {
-                write!(f, "Cell reference count {} exceeds maximum allowed {}", count, max)
+                write!(
+                    f,
+                    "Cell reference count {} exceeds maximum allowed {}",
+                    count, max
+                )
             }
             Self::DeserializationError(msg) => write!(f, "Deserialization error: {}", msg),
             Self::TrailingBytes { remaining } => {
-                write!(f, "Trailing bytes remaining after deserialization: {}", remaining)
+                write!(
+                    f,
+                    "Trailing bytes remaining after deserialization: {}",
+                    remaining
+                )
             }
-            Self::InvalidStateType(code) => write!(f, "Invalid account state type u8: {:#04x}", code),
+            Self::InvalidStateType(code) => {
+                write!(f, "Invalid account state type u8: {:#04x}", code)
+            }
             Self::InvalidStateTransition(msg) => write!(f, "Invalid state transition: {}", msg),
             Self::LogicalTimeRegression { current, next } => write!(
                 f,
@@ -51,7 +68,9 @@ impl fmt::Display for StateModelError {
                 next, current
             ),
             Self::BalanceUnderflow => write!(f, "Balance underflow: balance cannot be negative"),
-            Self::CyclicCellReference => write!(f, "Cyclic cell reference detected in Bag-of-Cells"),
+            Self::CyclicCellReference => {
+                write!(f, "Cyclic cell reference detected in Bag-of-Cells")
+            }
             Self::StateRootMismatch { expected, actual } => write!(
                 f,
                 "State root mismatch: expected {:?}, actual {:?}",

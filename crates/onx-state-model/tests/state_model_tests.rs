@@ -127,11 +127,7 @@ fn test_cell_hashing_and_limits() {
     let child1 = Cell::new(vec![1, 2, 3], vec![]).unwrap();
     let child2 = Cell::new(vec![4, 5, 6], vec![]).unwrap();
 
-    let parent = Cell::new(
-        vec![7, 8, 9],
-        vec![child1.hash(), child2.hash()],
-    )
-    .unwrap();
+    let parent = Cell::new(vec![7, 8, 9], vec![child1.hash(), child2.hash()]).unwrap();
 
     // Hashing is deterministic
     assert_eq!(parent.hash(), parent.hash());
