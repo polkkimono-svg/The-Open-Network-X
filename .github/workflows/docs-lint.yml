@@ -29,7 +29,7 @@ jobs:
         with:
           use-quiet-mode: 'yes'
           folder-path: '.'
-          config-file: 'mlc_config.json'
+          config-file: '.github/workflows/mlc_config.json'
 
       - name: Verify Specification Structure Rules
         run: |
