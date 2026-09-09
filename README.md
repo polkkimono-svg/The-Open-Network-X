@@ -53,7 +53,7 @@ Similarity between ONX and existing TON architecture is intentional where that s
 
 ## The white paper is the starting point
 
-The original TON white paper (`ton.md`) is the primary historical and architectural reference for this project, and is included in this repository as a reference document. ONX does not modify the white paper to make the implementation easier — instead, the implementation adapts to the specification:
+The original TON white paper (`whitepaper.md`) is the primary historical and architectural reference for this project, and is included in this repository as a reference document. ONX does not modify the white paper to make the implementation easier — instead, the implementation adapts to the specification:
 
 - Where the white paper is precise, ONX strives for faithful implementation.
 - Where the white paper is ambiguous, ONX documents its interpretation.
@@ -129,7 +129,7 @@ See [`ROADMAP.md`](ROADMAP.md) for the full changelog and a prioritized, up-for-
 .
 ├── README.md
 ├── INSTRUCTIONS.md          # Development principles for this repository
-├── ton.md                   # Reference white paper (unmodified)
+├── whitepaper.md            # Reference white paper (unmodified)
 ├── Cargo.toml               # Rust workspace
 ├── crates/
 │   ├── onx-primitives/      # Canonical encoding, hashing, and signatures
@@ -160,4 +160,4 @@ Open Network X is an independent project. ONX, Open Network X, and Onyx should n
 
 ## License
 
-Licensing will be established before substantial implementation is distributed. Individual reference materials may have their own copyright and licensing requirements — see `ton.md` for the applicable source and attribution information.
+Licensing will be established before substantial implementation is distributed. Individual reference materials may have their own copyright and licensing requirements — see `whitepaper.md` for the applicable source and attribution information.
