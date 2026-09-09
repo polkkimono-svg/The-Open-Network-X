@@ -94,3 +94,11 @@ A migration certificate should authenticate the old subtree root, the successor 
 
 #### [QUESTION]
 What deterministic evidence threshold should a masterchain epoch use to classify a validator as persistently offline before applying ADR-0020's 10% frozen-stake debit: missed assigned rounds, missed signed blocks, or a stake-weighted availability window?
+
+### Entry #9
+
+#### [ANSWER]
+Persistent-offline evidence should be counted as missed assigned rounds inside a masterchain-committed epoch window. Assignment is already the deterministic duty source: it avoids treating a validator that was not selected for a round as offline, and it lets every verifier derive both the denominator and missed-round evidence from finalized headers. The threshold itself should be a configuration parameter committed by the masterchain rather than inferred from wall-clock availability or a stake-weighted observation. This keeps the later slashing transition replayable and separates the evidence threshold from the fixed debit percentage in ADR-0020.
+
+#### [QUESTION]
+Should a shard transition prepare commit the full 256- or 1,024-sample load window directly, or only a canonical hash whose preimage is fetched from the finalized shard-header sequence by validators and light clients?

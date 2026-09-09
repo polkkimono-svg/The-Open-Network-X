@@ -49,7 +49,11 @@ impl fmt::Display for ShardingError {
 
 pub mod pipeline;
 
-pub use pipeline::{merge_shard_states, split_shard_state, ShardState};
+pub use pipeline::{
+    merge_shard_states, merge_trigger_met, split_shard_state, split_trigger_met,
+    validate_transition_commit, LoadSample, ShardState, TransitionKind, MERGE_LOAD_WINDOW_BLOCKS,
+    PREPARE_LEAD_BLOCKS, SPLIT_LOAD_WINDOW_BLOCKS,
+};
 
 impl std::error::Error for ShardingError {}
 
