@@ -292,7 +292,7 @@ Of course, (7) is impossible mathematically, because a map from an infinite set 
 
 However, this is not so convenient for the proofs. If (8) is used at most _N_ times in a proof with 2<sup>_−k_</sup> _N < ϵ_ for some small _ϵ_ (say, _ϵ_ = 10<sup>_−_18</sup> ), we can reason as if (7) were true, provided we accept a failure probability _ϵ_ (i.e., the final conclusions will be true with probability at least 1 _− ϵ_ ).
 
-Final remark: in order to make the probability statement of (8) really rigorous, one must introduce a probability distribution on the set Bytes<sup>_∗_</sup> of all byte sequences. A way of doing this is by assuming all byte sequences of the same length _l_ equiprobable, and setting the probability of observing a sequence of length _l_ equal to _p_<sup>_l_</sup> _− p_<sup>_l_+1</sup> for some _p →_ 1 _−_ . Then (8) should be understood as a limit of conditional probability _P_ � Hash ( _s_ ) = Hash ( _s_<sup>_′_</sup> ) _|s_ = _s_<sup>_′_�</sup> when _p_ tends to one from below. 
+Final remark: in order to make the probability statement of (8) really rigorous, one must introduce a probability distribution on the set Bytes<sup>_∗_</sup> of all byte sequences. A way of doing this is by assuming all byte sequences of the same length _l_ equiprobable, and setting the probability of observing a sequence of length _l_ equal to _p_<sup>_l_</sup> _− p_<sup>_l_+1</sup> for some _p →_ 1 _−_ . Then (8) should be understood as a limit of conditional probability _P_ [ Hash ( _s_ ) = Hash ( _s_<sup>_′_</sup> ) _|s_ ≠ _s_<sup>_′_</sup> ] when _p_ tends to one from below.
 
 2.2.10. Hash used for the TON Blockchain. We are using the 256-bit sha256 hash for the TON Blockchain for the time being. If it turns out to be weaker than expected, it can be replaced by another hash function in the future. The choice of the hash function is a configurable parameter of the protocol, so it can be changed without hard forks as explained in 2.1.21. 
 
@@ -310,9 +310,9 @@ Other workchains can use other account ID formats, 256-bit or otherwise. For exa
 
 However, the bit length _l_ of an account ID must be fixed during the creation of the workchain (in the masterchain), and it must be at least 64, because the first 64 bits of account_id are used for sharding and message routing. 
 
-2.3.2. Main component: Hashmaps. The principal component of the TON blockchain state is a hashmap. In some cases we consider (partially defined) “maps” _h_ : **2**<sup>_n_</sup> ��� **2**<sup>_m_</sup> . More generally, we might be interested in hashmaps _h_ : **2**<sup>_n_</sup> ��� _X_ for a composite type _X_ . However, the source (or index) type is almost always **2**<sup>_n_</sup> . 
+2.3.2. Main component: Hashmaps. The principal component of the TON blockchain state is a hashmap. In some cases we consider (partially defined) “maps” _h_ : **2**<sup>_n_</sup> → **2**<sup>_m_</sup> . More generally, we might be interested in hashmaps _h_ : **2**<sup>_n_</sup> → _X_ for a composite type _X_ . However, the source (or index) type is almost always **2**<sup>_n_</sup> .
 
-Sometimes, we have a “default value” empty : _X_ , and the hashmap _h_ : **2**<sup>_n_</sup> _→ X_ is “initialized” by its “default value” _i �→_ empty. 
+Sometimes, we have a “default value” empty : _X_ , and the hashmap _h_ : **2**<sup>_n_</sup> _→ X_ is “initialized” by its “default value” _i ↦_ empty.
 
 2.3.3. Example: TON account balances. An important example is given by TON account balances. It is a hashmap 
 
@@ -332,11 +332,11 @@ This hashmap also has a default value of zero, meaning that uninitialized cells 
 
 mapping account_id of a smart contract into its persistent storage. 
 
-2.3.6. Hashmap type. The hashmap is not just an abstract (partially defined) function **2**<sup>_n_</sup> ��� _X_ ; it has a specific representation. Therefore, we suppose that we have a special hashmap type 
+2.3.6. Hashmap type. The hashmap is not just an abstract (partially defined) function **2**<sup>_n_</sup> → _X_ ; it has a specific representation. Therefore, we suppose that we have a special hashmap type
 
 
 
-corresponding to a data structure encoding a (partial) map **2**<sup>_n_</sup> ��� _X_ . We can also write 
+corresponding to a data structure encoding a (partial) map **2**<sup>_n_</sup> → _X_ . We can also write
 
 
 
@@ -430,7 +430,7 @@ In this way, the persistent data storage cells of a TON smart contract are organ
 
 2.3.15. Generalized Merkle proofs for values of arbitrary algebraic types. Because the TON VM represents a value of arbitrary algebraic type by means of a tree consisting of (TVM) cells, and each cell has a well-defined (recursively computed) Merkle hash, depending in fact on the whole subtree rooted in this cell, we can provide “generalized Merkle proofs” for (parts of) values of arbitrary algebraic types, intended to prove that a certain subtree of a tree with a known Merkle hash takes a specific value or a value with a specific hash. This generalizes the approach of 2.3.10, where only Merkle proofs for _x_ [ _i_ ] = _y_ have been considered. 
 
-2.3.16. Support for sharding in TON VM data structures. We have just outlined how the TON VM, without being overly complicated, supports arbitrary (dependent) algebraic data types in high-level smart-contract languages. However, sharding of large (or global) smart contracts requires special support on the level of TON VM. To this end, a special version of the hashmap type has been added to the system, amounting to a “map” Account ��� _X_ . This “map” might seem equivalent to Hashmap ( _m, X_ ) , where Account = **2**<sup>_m_</sup> . However, when a shard is split in two, or two shards are merged, such hashmaps are automatically split in two, or merged back, so as to keep only those keys that belong to the corresponding shard. 
+2.3.16. Support for sharding in TON VM data structures. We have just outlined how the TON VM, without being overly complicated, supports arbitrary (dependent) algebraic data types in high-level smart-contract languages. However, sharding of large (or global) smart contracts requires special support on the level of TON VM. To this end, a special version of the hashmap type has been added to the system, amounting to a “map” Account → _X_ . This “map” might seem equivalent to Hashmap ( _m, X_ ) , where Account = **2**<sup>_m_</sup> . However, when a shard is split in two, or two shards are merged, such hashmaps are automatically split in two, or merged back, so as to keep only those keys that belong to the corresponding shard.
 
 2.3.17. Payment for persistent storage. A noteworthy feature of the TON Blockchain is the payment exacted from smart contracts for storing their persistent data (i.e., for enlarging the total state of the blockchain). It works as follows: 
 
@@ -608,7 +608,7 @@ We start with a “high-level” or “logical” description, which consists in
 
 where all account_id appearing as indices of this hashmap must begin with prefix _s_ , if we are discussing the state of shard ( _w, s_ ) (cf. 2.1.8). 
 
-In practice, we might want to split AccountState into several parts (e.g., keep the account output message queue separate to simplify its examination by the neighboring shardchains), and have several hashmaps ( Account ��� AccountStatePart _i_ ) inside the ShardchainState. We might also add a small number of “global” or “integral” parameters to the ShardchainState, (e.g., the total balance of all accounts belonging to this shard, or the total number of messages in all output queues). 
+In practice, we might want to split AccountState into several parts (e.g., keep the account output message queue separate to simplify its examination by the neighboring shardchains), and have several hashmaps ( Account → AccountStatePart _i_ ) inside the ShardchainState. We might also add a small number of “global” or “integral” parameters to the ShardchainState, (e.g., the total balance of all accounts belonging to this shard, or the total number of messages in all output queues).
 
 However, (23) is a good first approximation of what the shardchain global state looks like, at least from a “logical” (“high-level”) perspective. The formal description of algebraic types AccountState and ShardchainState can be done with the aid of a TL-scheme (cf. 2.2.5), to be provided elsewhere. 
 
