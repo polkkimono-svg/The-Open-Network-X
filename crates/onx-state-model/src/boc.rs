@@ -13,7 +13,10 @@ pub struct BagOfCells {
 impl BagOfCells {
     /// Constructs a BagOfCells given a root hash and a map of all constituent cells.
     /// Rejects if root hash is missing or if the cell graph contains a cycle.
-    pub fn new(root_hash: [u8; 32], cells: HashMap<[u8; 32], Cell>) -> Result<Self, StateModelError> {
+    pub fn new(
+        root_hash: [u8; 32],
+        cells: HashMap<[u8; 32], Cell>,
+    ) -> Result<Self, StateModelError> {
         if !cells.contains_key(&root_hash) {
             return Err(StateModelError::DeserializationError(
                 "Root cell hash not found in cell map".to_string(),

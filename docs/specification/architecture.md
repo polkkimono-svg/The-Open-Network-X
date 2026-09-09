@@ -129,16 +129,18 @@ These are intentionally unresolved, not defaults:
 
 | ID | Question | Required resolution artifact |
 | --- | --- | --- |
-| ONX-ARCH-001 | What canonical serialization and hashing scheme will ONX use? | Protocol-primitives specification and test vectors. |
-| ONX-ARCH-002 | What is the initial account-address format and supported address space? | Data-structures specification. |
-| ONX-ARCH-003 | Which authenticated state representation and proof format will be used? | State-model specification. |
-| ONX-ARCH-004 | How are cross-shard message order, replay, and failure defined? | Messaging specification and adversarial tests. |
+| ONX-ARCH-001 | What canonical serialization and hashing scheme will ONX use? | Resolved in `docs/specification/protocol-primitives.md` and ADR-0002. |
+| ONX-ARCH-002 | What is the initial account-address format and supported address space? | Resolved in `docs/specification/data-structures.md` and ADR-0002. |
+| ONX-ARCH-003 | Which authenticated state representation and proof format will be used? | Resolved in `docs/specification/state-model.md` and ADR-0003. |
+| ONX-ARCH-004 | How are cross-shard message order, replay, and failure defined? | Resolved in `docs/specification/transactions.md` and ADR-0005. |
 | ONX-ARCH-005 | What constitutes finality, and how are invalid-block claims and corrections processed? | Consensus specification and ADR if an interpretation is chosen. |
 | ONX-ARCH-006 | What initial workchains exist, and which VM rules apply to each? | Workchain and VM specifications. |
 | ONX-ARCH-007 | What split/merge thresholds, timing, and state-transition rules apply? | Sharding specification and deterministic tests. |
 | ONX-ARCH-008 | What are Onyx supply, denomination, fee, reward, stake, and penalty rules? | Economics specification and ADRs. |
 | ONX-ARCH-009 | What are the payment-channel and payment-channel-network (lightning-style) protocol rules, and what Execution/VM primitives (e.g. Merkle-proof operations over an embedded virtual blockchain) do they require? | Payment-channels specification, with an explicit cross-reference from the Execution specification. |
 | ONX-ARCH-010 | What are the peer-identity/transport (ADNL), distributed-hash-table (DHT), and overlay/gossip protocol rules nodes use to find each other and propagate blocks? | Networking specification(s); may be split into sub-specifications per component. |
+| ONX-ARCH-011 | Under what conditions, if any, will ONX adopt or reactivate Instant Hypercube Routing ("fast path" direct relay with Merkle proofs)? | Deferred in `docs/specification/transactions.md`; requires future Hypercube Routing ADR/spec. |
+| ONX-ARCH-012 | How are hypercube forwarding fee rates and message queue expiry timeouts calculated across heterogeneous workchains? | Future Messaging & Economics sub-specification. |
 
 ## Non-goals
 

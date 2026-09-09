@@ -51,7 +51,10 @@ impl ShardStateTree {
     }
 
     /// Generates a Merkle proof for a given account ID.
-    pub fn generate_proof(&self, target_account_id: AccountId) -> Result<MerkleProof, StateModelError> {
+    pub fn generate_proof(
+        &self,
+        target_account_id: AccountId,
+    ) -> Result<MerkleProof, StateModelError> {
         let target_key = target_account_id.to_bytes();
 
         let items: Vec<([u8; 32], Vec<u8>)> = self
@@ -113,9 +116,10 @@ fn build_trie_cells(
     let byte_idx = bit_depth / 8;
     let bit_idx = 7 - (bit_depth % 8);
 
-    let (left, right): (Vec<_>, Vec<_>) = items.iter().cloned().partition(|(key, _)| {
-        (key[byte_idx] & (1 << bit_idx)) == 0
-    });
+    let (left, right): (Vec<_>, Vec<_>) = items
+        .iter()
+        .cloned()
+        .partition(|(key, _)| (key[byte_idx] & (1 << bit_idx)) == 0);
 
     let left_cell = build_trie_cells(&left, bit_depth + 1, cell_map)?;
     let right_cell = build_trie_cells(&right, bit_depth + 1, cell_map)?;
