@@ -33,6 +33,10 @@ incomplete. No numeric value, wire format, cryptographic primitive, election
 procedure, or economic rule becomes an ONX rule until a separate ONX
 specification or accepted decision says so.
 
+## ONX interpretation
+
+ONX interprets the historical architecture as a set of explicitly separated protocol domains. The following model records that interpretation; it does not create executable consensus rules.
+
 ## Architectural model
 
 ONX retains the following concepts as distinct protocol domains:

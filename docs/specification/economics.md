@@ -11,7 +11,9 @@
 
 Economic values must be explicit ONX decisions rather than implicit inheritance from a historical reference.
 
-## 3. ONX decisions
+## 3. ONX interpretation
+
+### 3.1 Decisions
 
 | Reference figure | ONX decision | Rationale |
 | --- | --- | --- |
