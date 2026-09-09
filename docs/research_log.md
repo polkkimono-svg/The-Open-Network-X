@@ -97,3 +97,13 @@ Automated log of commits tracked against whitepaper.md.
 - **Modified files:**
   - docs/RESEARCH_LOGBOOK.md
 
+## Commit 576df87cf6cf6a96e250564c5db477cedad8bf15
+
+- **Timestamp:** 2026-09-09T21:28:49Z
+- **Event:** push
+- **Modified files:**
+  - crates/onx-transactions/src/error.rs
+  - crates/onx-transactions/src/lib.rs
+  - crates/onx-transactions/src/router.rs
+  - crates/onx-transactions/tests/transactions_tests.rs
+
