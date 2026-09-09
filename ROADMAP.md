@@ -5,6 +5,10 @@ order, what should be worked on next. It follows the build-incrementally
 sequence from `INSTRUCTIONS.md` §23 and the specification sequence from
 `docs/specification/architecture.md`.
 
+For a structured breakdown of 20 actionable development tasks advancing ONX
+from protocol libraries toward a production-grade node daemon, network, and
+tooling ecosystem, see [`docs/development-tasks.md`](docs/development-tasks.md).
+
 ## Changelog
 
 ### 2026-09-10

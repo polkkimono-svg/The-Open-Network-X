@@ -47,3 +47,11 @@ Storage fee accrual in ONX is evaluated outside the opcode loop prior to VM exec
 
 #### [QUESTION]
 How should cross-workchain transaction fee conversion rates and message queue expiration logical-time bounds be calibrated and enforced across workchains with heterogeneous VM execution models and block generation frequencies?
+
+### Entry #5
+
+#### [ANSWER]
+Cross-workchain transaction fee conversion rates and message queue expiration bounds in ONX are governed by masterchain-committed exchange rate feeds and normalized logical time (`created_lt` / `expire_at_lt`) scaling factors as specified in ADR-0018. Each workchain header committed to the masterchain reports its local gas unit rate in nanocoins and target block period. The masterchain computes and signs canonical cross-workchain exchange matrices during epoch transitions. Message queue expiration bounds are evaluated relative to normalized logical time deltas rather than local block numbers or wall-clock timestamps, guaranteeing deterministic message bounce generation across workchains with heterogeneous execution speeds and gas accounting models.
+
+#### [QUESTION]
+How should state migration during shard splits and merges preserve atomic cross-shard message delivery order and state proof validity when accounts move between shard trees under high transaction load?
