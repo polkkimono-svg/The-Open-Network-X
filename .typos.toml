@@ -1,0 +1,8 @@
+[files]
+extend-exclude = [
+    "whitepaper.md",
+    "docs/whitepaper-page-header-review.md",
+]
+
+[default.extend-words]
+mis = "mis"
