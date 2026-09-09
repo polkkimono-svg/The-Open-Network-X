@@ -123,6 +123,57 @@ fn test_account_lifecycle_transitions() {
 }
 
 #[test]
+fn test_balance_underflow_and_transition_with_delta() {
+    let active_init = AccountState::Active {
+        balance_nanos: 1_000_000,
+        last_trans_lt: 10,
+        code_hash: [1; 32],
+        data_hash: [2; 32],
+        storage_stat: StorageStat {
+            cell_count: 1,
+            byte_count: 100,
+        },
+    };
+
+    // Valid balance deduction transition (1_000_000 - 300_000 = 700_000)
+    let active_next_valid = AccountState::Active {
+        balance_nanos: 700_000,
+        last_trans_lt: 15,
+        code_hash: [1; 32],
+        data_hash: [2; 32],
+        storage_stat: StorageStat {
+            cell_count: 1,
+            byte_count: 100,
+        },
+    };
+    assert!(active_init
+        .validate_transition_with_delta(&active_next_valid, 15, -300_000)
+        .is_ok());
+
+    // Balance underflow rejection (1_000_000 - 1_500_000 < 0)
+    let active_next_underflow = AccountState::Active {
+        balance_nanos: 0,
+        last_trans_lt: 15,
+        code_hash: [1; 32],
+        data_hash: [2; 32],
+        storage_stat: StorageStat {
+            cell_count: 1,
+            byte_count: 100,
+        },
+    };
+    assert!(matches!(
+        active_init.validate_transition_with_delta(&active_next_underflow, 15, -1_500_000),
+        Err(StateModelError::BalanceUnderflow)
+    ));
+
+    // Mismatched expected next balance vs actual next balance state
+    assert!(matches!(
+        active_init.validate_transition_with_delta(&active_next_valid, 15, -200_000),
+        Err(StateModelError::InvalidStateTransition(_))
+    ));
+}
+
+#[test]
 fn test_cell_hashing_and_limits() {
     let child1 = Cell::new(vec![1, 2, 3], vec![]).unwrap();
     let child2 = Cell::new(vec![4, 5, 6], vec![]).unwrap();

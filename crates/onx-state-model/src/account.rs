@@ -63,6 +63,16 @@ impl AccountState {
         }
     }
 
+    /// Returns the account balance in nanocoins, or 0 if uninitialized or destroyed.
+    pub fn balance_nanos(&self) -> u128 {
+        match self {
+            Self::Active { balance_nanos, .. } | Self::Frozen { balance_nanos, .. } => {
+                *balance_nanos
+            }
+            Self::Uninitialized | Self::Destroyed => 0,
+        }
+    }
+
     /// Serializes an active account state record according to docs/specification/state-model.md §4.1.
     pub fn to_bytes(&self) -> Vec<u8> {
         match self {
@@ -291,5 +301,39 @@ impl AccountState {
                 next.account_type()
             ))),
         }
+    }
+
+    /// Validates a proposed state transition from `self` to `next` with logical time,
+    /// lifecycle rules, and balance delta checks. Returns `StateModelError::BalanceUnderflow`
+    /// if `balance_delta` causes the resulting account balance to fall below zero.
+    pub fn validate_transition_with_delta(
+        &self,
+        next: &AccountState,
+        new_lt: u64,
+        balance_delta: i128,
+    ) -> Result<(), StateModelError> {
+        self.validate_transition(next, new_lt)?;
+
+        let cur_balance = self.balance_nanos();
+        if balance_delta < 0 && balance_delta.unsigned_abs() > cur_balance {
+            return Err(StateModelError::BalanceUnderflow);
+        }
+
+        let expected_next_balance = if balance_delta >= 0 {
+            cur_balance.saturating_add(balance_delta as u128)
+        } else {
+            cur_balance - balance_delta.unsigned_abs()
+        };
+
+        if let Self::Active { balance_nanos, .. } | Self::Frozen { balance_nanos, .. } = next {
+            if *balance_nanos != expected_next_balance {
+                return Err(StateModelError::InvalidStateTransition(format!(
+                    "Expected next state balance {}, found {}",
+                    expected_next_balance, balance_nanos
+                )));
+            }
+        }
+
+        Ok(())
     }
 }
