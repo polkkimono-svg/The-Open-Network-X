@@ -2,10 +2,9 @@ name: CI
 
 on:
   pull_request:
+    branches: [main]
   push:
-    branches:
-      - main
-      - work
+    branches: [main]
 
 permissions:
   contents: read
@@ -22,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install stable Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.83.0
         with:
           components: clippy, rustfmt
 
@@ -41,14 +40,16 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --all-targets
 
+      - name: Check specification citations
+        run: python3 scripts/check-spec-citations.py
+
   audit:
     name: Security audit
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
+      - name: Install pinned cargo-audit
+        run: cargo install cargo-audit --version 0.21.2 --locked
       - name: Security audit
-        uses: rustsec/audit-check@v2.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo audit

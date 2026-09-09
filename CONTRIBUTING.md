@@ -126,3 +126,8 @@ consensus-critical code.
 checklist. Before starting something from it, check for an open PR or issue
 already claiming it. If you start something not on the list, add it once
 you open the PR so the roadmap stays accurate.
+
+## Minimum supported Rust version
+
+ONX pins Rust **1.83.0** in `rust-toolchain.toml`. It is the oldest installed stable toolchain selected for the complete workspace; CI runs the full build and test matrix on that exact version. CI uses that exact toolchain so dependency updates that
+raise the real MSRV fail before release.
