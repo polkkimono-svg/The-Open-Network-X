@@ -208,3 +208,74 @@ fn expanded_conditional_opcodes_charge_four_gas() {
         );
     }
 }
+
+#[test]
+fn dictionary_set_lookup_update_and_delete() {
+    use onx_execution::Dictionary;
+
+    let mut dictionary = Dictionary::new(9).unwrap();
+    let first = Cell::new(vec![1], vec![]).unwrap();
+    let replacement = Cell::new(vec![2], vec![]).unwrap();
+    let other = Cell::new(vec![3], vec![]).unwrap();
+    let key_a = [0b1010_0000, 0b1000_0000];
+    let key_b = [0b1010_0000, 0b0000_0000];
+
+    assert_eq!(dictionary.set(&key_a, first.clone()).unwrap(), None);
+    assert_eq!(dictionary.set(&key_b, other.clone()).unwrap(), None);
+    assert_eq!(dictionary.get(&key_a).unwrap(), Some(&first));
+    assert!(dictionary.root_cell().is_some());
+    assert_eq!(
+        dictionary.set(&key_a, replacement.clone()).unwrap(),
+        Some(first)
+    );
+    assert_eq!(dictionary.get(&key_a).unwrap(), Some(&replacement));
+    assert_eq!(dictionary.delete(&key_a).unwrap(), Some(replacement));
+    assert_eq!(dictionary.get(&key_a).unwrap(), None);
+    assert_eq!(dictionary.get(&key_b).unwrap(), Some(&other));
+}
+
+#[test]
+fn exception_jumps_to_c2_continuation() {
+    use onx_execution::Continuation;
+
+    let code = Cell::new(vec![0x77, 0x02], vec![]).unwrap(); // THROW MalformedCell
+    let handler = Cell::new(vec![0x00], vec![]).unwrap(); // NOP then finish
+    let data = Cell::new(vec![], vec![]).unwrap();
+    let mut interpreter = Interpreter::new(code, data, dummy_message(), dummy_context(100));
+    interpreter.set_exception_handler(Continuation::new(handler, 0));
+
+    assert!(matches!(
+        interpreter.run(),
+        ExecutionResult::Success { gas_used: 5, .. }
+    ));
+    assert_eq!(interpreter.stack.last(), Some(&StackValue::from_i128(3)));
+}
+
+#[test]
+fn alternative_return_uses_c1_continuation() {
+    use onx_execution::Continuation;
+
+    let code = Cell::new(vec![0x00], vec![]).unwrap();
+    let alternate = Cell::new(vec![0x00], vec![]).unwrap();
+    let data = Cell::new(vec![], vec![]).unwrap();
+    let mut interpreter = Interpreter::new(code, data, dummy_message(), dummy_context(100));
+    interpreter.set_alternative_return(Continuation::new(alternate.clone(), 0));
+
+    assert!(interpreter.return_to_control_register(true));
+    assert_eq!(interpreter.current_code, alternate);
+    assert_eq!(interpreter.pc_bits, 0);
+}
+
+#[test]
+fn dictionary_supports_the_maximum_key_width() {
+    use onx_execution::Dictionary;
+
+    let mut dictionary = Dictionary::new(1023).unwrap();
+    let key = [0xA5; 128];
+    let value = Cell::new(vec![42], vec![]).unwrap();
+    dictionary.dict_set(&key, value.clone()).unwrap();
+    assert_eq!(dictionary.dict_get(&key).unwrap(), Some(&value));
+    assert!(dictionary.root_cell().is_some());
+    assert_eq!(dictionary.dict_del(&key).unwrap(), Some(value));
+    assert!(dictionary.root_cell().is_none());
+}
