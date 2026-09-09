@@ -7,6 +7,8 @@ use std::fmt;
 pub enum ConsensusError {
     InvalidCandidateStake,
     InvalidLoadFactor,
+    DuplicateCandidate,
+    EmptyValidatorSet,
     InsufficientQuorumStake,
     InvalidSignature,
     DuplicateValidatorSignature,
@@ -23,6 +25,12 @@ impl fmt::Display for ConsensusError {
                 write!(f, "Proposed candidate stake must be greater than zero")
             }
             Self::InvalidLoadFactor => write!(f, "Load factor out of valid range"),
+            Self::DuplicateCandidate => {
+                write!(f, "Candidate public key was submitted more than once")
+            }
+            Self::EmptyValidatorSet => {
+                write!(f, "Validator election produced no active validators")
+            }
             Self::InsufficientQuorumStake => {
                 write!(f, "Signed stake is less than 2/3 BFT quorum threshold")
             }
@@ -41,6 +49,10 @@ impl fmt::Display for ConsensusError {
         }
     }
 }
+
+pub mod election;
+
+pub use election::{run_election, ElectionConfig, ElectionResult, StakeRefund};
 
 impl std::error::Error for ConsensusError {}
 
