@@ -1,5 +1,19 @@
 # Open Network X
 
+[![CI](https://github.com/quickerup/The-Open-Network-X/actions/workflows/ci.yml/badge.svg)](https://github.com/quickerup/The-Open-Network-X/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/quickerup/The-Open-Network-X/actions/workflows/codeql.yml/badge.svg)](https://github.com/quickerup/The-Open-Network-X/actions/workflows/codeql.yml)
+[![Code Coverage](https://github.com/quickerup/The-Open-Network-X/actions/workflows/coverage.yml/badge.svg)](https://github.com/quickerup/The-Open-Network-X/actions/workflows/coverage.yml)
+[![Cargo Deny](https://github.com/quickerup/The-Open-Network-X/actions/workflows/deny.yml/badge.svg)](https://github.com/quickerup/The-Open-Network-X/actions/workflows/deny.yml)
+
+[![License: Apache-2.0](https://img.shields.io/github/license/quickerup/The-Open-Network-X)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.98.1-orange?logo=rust&logoColor=white)](rust-toolchain.toml)
+[![Last Commit](https://img.shields.io/github/last-commit/quickerup/The-Open-Network-X)](https://github.com/quickerup/The-Open-Network-X/commits/main)
+[![Open Issues](https://img.shields.io/github/issues/quickerup/The-Open-Network-X)](https://github.com/quickerup/The-Open-Network-X/issues)
+[![Stars](https://img.shields.io/github/stars/quickerup/The-Open-Network-X?style=social)](https://github.com/quickerup/The-Open-Network-X/stargazers)
+
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Status](https://img.shields.io/badge/status-early--research-orange)](#project-status)
+
 **Open Network X (ONX)** is an independent blockchain implementation project inspired by the architecture and technical vision described in the original The Open Network (TON) white paper.
 
 ONX explores, reconstructs, and implements that vision independently and from first principles. It is not the TON blockchain, is not an official continuation of TON, and is not intended to replace the existing TON network or its community. The native currency of Open Network X is **Onyx**.
