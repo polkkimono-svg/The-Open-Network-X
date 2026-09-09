@@ -109,14 +109,19 @@ fn test_message_round_trip_and_validation() {
         src_address: src,
         dest_address: dest,
         amount_nanos: Uint128::from(1_000_000_000u128),
+        extra_currencies: vec![
+            (Uint32::from(7u32), Uint128::from(42u128)),
+            (Uint32::from(9u32), Uint128::from(84u128)),
+        ],
         created_lt: Uint64::from(1001u64),
         body_cell_hash: Uint256([0xAA; 32]),
     };
 
     let bytes = msg.to_bytes();
-    assert_eq!(bytes.len(), Message::BYTE_LENGTH);
+    assert_eq!(bytes.len(), Message::FIXED_BYTE_LENGTH + 40);
     let decoded = Message::from_bytes(&bytes).unwrap();
     assert_eq!(decoded, msg);
+    assert_eq!(decoded.message_hash(), msg.message_hash());
 
     // Malformed message type tag
     let mut bad_bytes = bytes;
@@ -174,6 +179,7 @@ fn test_truncated_and_trailing_bytes_rejection() {
         src_address: src,
         dest_address: dest,
         amount_nanos: Uint128::from(100u128),
+        extra_currencies: vec![],
         created_lt: Uint64::from(1u64),
         body_cell_hash: Uint256([0x55; 32]),
     };
@@ -183,7 +189,7 @@ fn test_truncated_and_trailing_bytes_rejection() {
     assert!(matches!(
         Message::from_bytes(&bytes[..100]),
         Err(DataStructureError::TruncatedInput {
-            expected: 129,
+            expected: Message::FIXED_BYTE_LENGTH,
             got: 100
         })
     ));

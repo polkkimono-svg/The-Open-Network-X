@@ -12,3 +12,4 @@ onx-data-structures = { path = "../onx-data-structures" }
 
 [dev-dependencies]
 hex = "0.4"
+proptest = "1.6"

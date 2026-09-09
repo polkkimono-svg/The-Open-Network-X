@@ -1,4 +1,4 @@
-# ADR-0008 — Abstract Datagram Network Layer (ADNL) and Reliable Datagram Transport (RLDP)
+# ADR-0009 — Abstract Datagram Network Layer (ADNL) and Reliable Datagram Transport (RLDP)
 
 **Status:** Accepted
 **Date:** 2026-09-09

@@ -90,6 +90,11 @@ Specification work completed so far, with accompanying architecture decision rec
 | Transactions and messages | `docs/specification/transactions.md` | `ADR-0005` |
 | Blocks and masterchain coupling | `docs/specification/blocks.md` | `ADR-0006` |
 | Execution (virtual machine) | `docs/specification/execution.md` | `ADR-0007` |
+| Consensus and validator operation | `docs/specification/consensus.md` | `ADR-0008` |
+| Networking (ADNL, DHT, overlays) | `docs/specification/networking-*.md` | `ADR-0009`–`ADR-0011` |
+| Dynamic sharding | `docs/specification/sharding.md` | `ADR-0012` |
+| Economics | `docs/specification/economics.md` | `ADR-0013` |
+| Payment channels | `docs/specification/payment-channels.md` | `ADR-0014` |
 
 The `crates/onx-primitives`, `crates/onx-data-structures`, and `crates/onx-state-model` crates cover the protocol-primitives, data-structures, and state-model specifications above.
 
@@ -163,4 +168,4 @@ Open Network X is an independent project. ONX, Open Network X, and Onyx should n
 
 ## License
 
-Licensing will be established before substantial implementation is distributed. Individual reference materials may have their own copyright and licensing requirements — see `whitepaper.md` for the applicable source and attribution information.
+License selection is pending review of [ADR-0015](docs/decisions/ADR-0015-project-license.md); no `LICENSE` file has been adopted yet. Individual reference materials may have their own copyright and licensing requirements — see `whitepaper.md` for the applicable source and attribution information.
