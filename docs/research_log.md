@@ -204,3 +204,17 @@ Automated log of commits tracked against whitepaper.md.
   - crates/onx-execution/src/lib.rs
   - crates/onx-execution/tests/execution_tests.rs
 
+## Commit 3b2824ccb00526e133e57a7cce79c75f630bb65e
+
+- **Timestamp:** 2026-09-10T00:17:59Z
+- **Event:** push
+- **Modified files:**
+  - .github/workflows/fuzz-regression.yml
+  - Cargo.lock
+  - crates/onx-networking/Cargo.toml
+  - crates/onx-networking/src/adnl_transport.rs
+  - crates/onx-networking/src/lib.rs
+  - crates/onx-networking/tests/adnl_loopback.rs
+  - crates/onx-primitives/src/signature.rs
+  - crates/onx-state-model/src/storage.rs
+
