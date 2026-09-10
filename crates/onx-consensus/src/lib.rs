@@ -16,6 +16,11 @@ pub enum ConsensusError {
     InvalidityProofVerificationFailed,
     ChallengeWindowExpired,
     DoubleSigningDetected,
+    UnknownValidator,
+    InvalidLeader,
+    InvalidRound,
+    InvalidStep,
+    ConflictingProposal,
 }
 
 impl fmt::Display for ConsensusError {
@@ -46,13 +51,28 @@ impl fmt::Display for ConsensusError {
             }
             Self::ChallengeWindowExpired => write!(f, "Block age exceeds 2-month challenge window"),
             Self::DoubleSigningDetected => write!(f, "Double-signing misconduct detected"),
+            Self::UnknownValidator => write!(
+                f,
+                "Vote was submitted by a validator outside the task group"
+            ),
+            Self::InvalidLeader => write!(f, "Proposal was not signed by the scheduled leader"),
+            Self::InvalidRound => write!(f, "Consensus message belongs to a different round"),
+            Self::InvalidStep => write!(f, "Consensus message is invalid for the current step"),
+            Self::ConflictingProposal => {
+                write!(f, "A different block was proposed for the active round")
+            }
         }
     }
 }
 
 pub mod election;
+pub mod engine;
 
 pub use election::{run_election, ElectionConfig, ElectionResult, StakeRefund};
+pub use engine::{
+    proposal_signing_bytes, vote_signing_bytes, ConsensusEngine, ConsensusProposal, ConsensusStep,
+    ConsensusVote, FinalizedBlock, RoundTimeouts, VotePhase,
+};
 
 impl std::error::Error for ConsensusError {}
 
