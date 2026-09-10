@@ -1,0 +1,17 @@
+[[balances]]
+address = "onx:alice"
+amount = 1000000
+
+[[balances]]
+address = "onx:bob"
+amount = 2000000
+
+[[validators]]
+public_key = "validator-01"
+stake = 1000
+
+[[workchains]]
+id = 0
+name = "masterchain"
+shard_prefix = "0x00"
+enabled = true
