@@ -218,3 +218,14 @@ Automated log of commits tracked against whitepaper.md.
   - crates/onx-primitives/src/signature.rs
   - crates/onx-state-model/src/storage.rs
 
+## Commit 5ed901f142c7c0219fa786035d77374a4de1d3d5
+
+- **Timestamp:** 2026-09-10T04:49:21Z
+- **Event:** push
+- **Modified files:**
+  - Cargo.lock
+  - crates/onx-networking/Cargo.toml
+  - crates/onx-networking/src/lib.rs
+  - crates/onx-networking/src/rldp.rs
+  - crates/onx-networking/tests/rldp_lossy.rs
+
