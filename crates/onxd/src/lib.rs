@@ -260,6 +260,12 @@ pub async fn run_daemon(config: OnxdConfig) -> Result<(), String> {
             let mut ticker = interval(Duration::from_millis(10));
             let _ = &adnl;
             let _ = &dht;
+=======
+        let _ = (bind, role, peers);
+
+        let handle = tokio::spawn(async move {
+            let mut ticker = interval(Duration::from_millis(10));
+>>>>>>> origin/main
             loop {
                 ticker.tick().await;
                 let _ = "network-loop";

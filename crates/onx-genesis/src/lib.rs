@@ -92,7 +92,6 @@ pub fn secure_output_dir(output: impl AsRef<Path>) -> Result<PathBuf, String> {
 
     Ok(out_canon)
 }
-
 pub fn parse_config(path: impl AsRef<Path>) -> Result<GenesisConfig, String> {
     let raw = fs::read_to_string(path.as_ref())
         .map_err(|err| format!("failed to read genesis config {}: {err}", path.as_ref().display()))?;
