@@ -415,6 +415,7 @@ dependencies = [
  "onx-data-structures",
  "onx-primitives",
  "rand",
+ "sha2 0.10.9",
  "tokio",
  "x25519-dalek",
 ]

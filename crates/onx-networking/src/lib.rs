@@ -1,4 +1,5 @@
 pub mod adnl_transport;
+pub mod rldp;
 
 pub use adnl_transport::{
     apply_aes256_ctr, derive_symmetric_key_iv, AdnlTransportNode, FastPacket, FullPacket,
@@ -21,6 +22,8 @@ pub enum NetworkError {
     ExpiredTimestamp,
     ZeroChannelAbuse,
     MalformedRldpFrame,
+    PayloadDigestMismatch,
+    RldpTimeout,
 }
 
 impl fmt::Display for NetworkError {
@@ -39,6 +42,8 @@ impl fmt::Display for NetworkError {
                 write!(f, "Non-bootstrap payload transmitted over zero-channel")
             }
             Self::MalformedRldpFrame => write!(f, "Malformed RLDP chunk or message frame"),
+            Self::PayloadDigestMismatch => write!(f, "RLDP payload SHA-256 digest mismatch"),
+            Self::RldpTimeout => write!(f, "RLDP transfer timed out before acknowledgement"),
         }
     }
 }
