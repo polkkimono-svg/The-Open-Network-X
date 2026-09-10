@@ -1,0 +1,12 @@
+[package]
+name = "onx-telemetry"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic ONX telemetry metrics and tracing registry shim."
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+prometheus = "0.13"
+tracing = "0.1"
+tokio = { version = "1.38", features = ["full"] }
