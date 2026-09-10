@@ -1,4 +1,5 @@
 pub mod adnl_transport;
+pub mod dht_daemon;
 pub mod rldp;
 
 pub use adnl_transport::{
@@ -24,6 +25,10 @@ pub enum NetworkError {
     MalformedRldpFrame,
     PayloadDigestMismatch,
     RldpTimeout,
+    DhtRecordExpired,
+    DhtMalformedRecord,
+    DhtUnknownRecordKind,
+    DhtRpcFailed,
 }
 
 impl fmt::Display for NetworkError {
@@ -44,6 +49,10 @@ impl fmt::Display for NetworkError {
             Self::MalformedRldpFrame => write!(f, "Malformed RLDP chunk or message frame"),
             Self::PayloadDigestMismatch => write!(f, "RLDP payload SHA-256 digest mismatch"),
             Self::RldpTimeout => write!(f, "RLDP transfer timed out before acknowledgement"),
+            Self::DhtRecordExpired => write!(f, "DHT record has expired"),
+            Self::DhtMalformedRecord => write!(f, "Malformed DHT record"),
+            Self::DhtUnknownRecordKind => write!(f, "Unknown DHT record kind"),
+            Self::DhtRpcFailed => write!(f, "DHT RPC failed"),
         }
     }
 }
@@ -129,6 +138,60 @@ impl DhtRecord {
         buf.extend_from_slice(&expiry.encode());
         buf.extend_from_slice(&owner_address.encode());
         buf
+    }
+
+    /// Encodes the canonical DHT record wire layout from the DHT specification.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut bytes =
+            Self::to_signable_bytes(self.key, &self.value, self.expiry, self.owner_address);
+        bytes.extend_from_slice(&self.signature.encode());
+        bytes
+    }
+
+    /// Decodes one complete record, rejecting truncated and trailing bytes.
+    pub fn decode_exact(bytes: &[u8]) -> Result<Self, NetworkError> {
+        const FIXED_WITHOUT_VALUE: usize = 32 + 4 + 8 + 32 + 64;
+        if bytes.len() < FIXED_WITHOUT_VALUE {
+            return Err(NetworkError::DhtMalformedRecord);
+        }
+        let mut cursor = bytes;
+        let take = |cursor: &mut &[u8], count: usize| -> Result<Vec<u8>, NetworkError> {
+            if cursor.len() < count {
+                return Err(NetworkError::DhtMalformedRecord);
+            }
+            let (head, tail) = cursor.split_at(count);
+            *cursor = tail;
+            Ok(head.to_vec())
+        };
+        let key = Uint256::decode_exact(&take(&mut cursor, 32)?)
+            .map_err(|_| NetworkError::DhtMalformedRecord)?;
+        let length =
+            u32::from_be_bytes(take(&mut cursor, 4)?.try_into().expect("four bytes")) as usize;
+        // The fixed tail must remain available and arithmetic must not overflow.
+        if cursor.len()
+            < length
+                .checked_add(8 + 32 + 64)
+                .ok_or(NetworkError::DhtMalformedRecord)?
+        {
+            return Err(NetworkError::DhtMalformedRecord);
+        }
+        let value = take(&mut cursor, length)?;
+        let expiry = Uint64::decode_exact(&take(&mut cursor, 8)?)
+            .map_err(|_| NetworkError::DhtMalformedRecord)?;
+        let owner_address = Uint256::decode_exact(&take(&mut cursor, 32)?)
+            .map_err(|_| NetworkError::DhtMalformedRecord)?;
+        let signature = Signature::decode_exact(&take(&mut cursor, 64)?)
+            .map_err(|_| NetworkError::DhtMalformedRecord)?;
+        if !cursor.is_empty() {
+            return Err(NetworkError::DhtMalformedRecord);
+        }
+        Ok(Self {
+            key,
+            value,
+            expiry,
+            owner_address,
+            signature,
+        })
     }
 
     pub fn verify_signature(&self, owner_public_key: &PublicKey) -> Result<(), NetworkError> {
