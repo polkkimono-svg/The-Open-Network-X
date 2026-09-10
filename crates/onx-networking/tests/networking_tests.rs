@@ -52,6 +52,14 @@ fn test_dht_record_signature_verification() {
     };
 
     assert_eq!(record.verify_signature(&pk), Ok(()));
+    assert_eq!(
+        DhtRecord::decode_exact(&record.to_bytes()),
+        Ok(record.clone())
+    );
+    assert_eq!(
+        DhtRecord::decode_exact(&[record.to_bytes(), vec![0]].concat()),
+        Err(NetworkError::DhtMalformedRecord)
+    );
 
     // Tampered value -> signature failure
     let mut tampered_record = record;
