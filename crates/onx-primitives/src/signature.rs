@@ -95,6 +95,10 @@ impl SecretKey {
         PublicKey(self.0.verifying_key())
     }
 
+    pub fn to_scalar_bytes(&self) -> [u8; 32] {
+        self.0.to_scalar_bytes()
+    }
+
     /// Signs `message` in the protocol context named by `tag`. The domain
     /// tag is always prepended before signing (§4.5).
     pub fn sign(&self, tag: &DomainTag, message: &[u8]) -> Signature {

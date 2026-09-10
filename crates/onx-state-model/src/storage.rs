@@ -366,7 +366,7 @@ fn hex(v: &[u8]) -> String {
     v.iter().map(|b| format!("{b:02x}")).collect()
 }
 fn unhex(v: &str) -> Result<Vec<u8>, StorageError> {
-    if v.len() % 2 != 0 {
+    if !v.len().is_multiple_of(2) {
         return Err(StorageError::Corrupt(
             "invalid hexadecimal storage key".into(),
         ));
